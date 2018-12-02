@@ -1,4 +1,4 @@
-```bash
+```
 ├── arvr - the main application module
 │   ├── forms.py - conatains all the different forms the site uses
 │   ├── __init__.py - contains initialization code for the package
