@@ -1,0 +1,130 @@
+{% extends "layout.html" %} 
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/layout.css') }}"> 
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/slick/slick.css') }}"/>
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/slick/slick-theme.css') }}"/>
+
+<style>
+	.slick-next, .slick-prev {
+		filter: invert(100%);
+		transform: scale(1.3);
+	}
+	/* For width smaller than 400px: */
+	.logo {
+			max-height: 100%;
+			width:100%;
+			margin:3em auto 0 auto;
+	}
+
+	/* For width 400px and larger: */
+	@media only screen and (min-width: 400px) {
+			.logo { 
+				width:40%;
+			}
+	}
+</style>
+{% endblock styles %} 
+
+{% block navbar %}
+	<a class="navbar-brand px-4" href="{{ url_for('index') }}">
+		<img src="/static/images/headLogo.png" style="max-height: 30px;margin-bottom:5px;"/>	
+		ARVR Lab 
+	</a>
+	<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+		<span class="navbar-toggler-icon"></span>
+	</button>
+
+	<div class="collapse navbar-collapse" id="navbarSupportedContent">
+		{% if student %}
+			<div class="navbar-container">
+				{% if student.profilePic %}
+					<img src="/static/images/profile/{{ student.profilePic }}" alt="student profile" class="avatar">
+				{% else %}
+					<img src="/static/images/profile/default.png" alt="default profile" class="avatar">
+				{% endif %}
+			</div>
+		{% endif %}
+		<ul class="navbar-nav mr-auto mt-2 mt-lg-0">
+		{% if student %}
+			<li class="nav-item dropdown my-2 my-lg-0">
+				<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+					{{ student.firstNameEng }} {{ student.lastNameEng }}
+				</a>
+				<div class="dropdown-menu " aria-labelledby="navbarDropdown">
+					<a class="dropdown-item" href="{{ url_for('home') }}">My Projects</a>
+					<a class="dropdown-item" href="{{ url_for('editAccount') }}">Edit Account</a>
+					<div class="dropdown-divider"></div>
+					<a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a>
+				</div>
+			</li>
+		{% endif %}
+			<li class="nav-item">
+				<a class="nav-link" href="#">About</a>
+			</li>
+			<li class="nav-item">
+				<a class="nav-link" href="{{ url_for('proposedProjects') }}">Proposed Projects</a>
+			</li>
+		</ul>
+		{% if admin %}	
+			<ul class="navbar-nav ml-auto mt-2 mt-lg-0">
+				<li class="nav-item">
+					<a class="nav-link" href="{{ url_for('home') }}">ARVR Lab Managment</a>
+				</li>
+			</ul>
+		{% endif %}
+		
+		{% if not current_user.is_authenticated  %}
+			<ul class="navbar-nav ml-auto mt-2 mt-lg-0">
+				<li class="nav-item">
+					<a class="nav-link" href="{{ url_for('login') }}">Login</a>
+				</li>
+				<li class="nav-item">
+					<a class="nav-link" href="{{ url_for('register') }}">Register</a>
+				</li>
+			</ul>
+		{% endif %}
+	</div>
+{% endblock navbar %}
+
+{% block content %}
+	<img src="/static/images/arvrLogo.png" class="img-responsive logo">
+	<div class="container">
+		{% if proposedProjects %}
+			<div class="carousel">			
+				{% for proposedProject in proposedProjects[0:5] %}
+					<div>
+						<a href="{{ url_for('proposedProjects') }}">
+							{% if proposedProject.image %}
+								<img class="mx-auto" style="width: 50vh;" src="/static/images/proposed_projects/{{proposedProject.image}}">
+							{% endif %}
+						</a>
+						<h5 style="margin:1em 0 0 0;">{{ proposedProject.title }}</h5>
+						<p style="white-space: pre-line;width:50%;margin:0 auto;">	
+							{{ proposedProject.description }}
+						</p>
+					</div>
+				{% endfor %}
+			</div>
+		{% endif %}
+	</div>	
+{% endblock content %}
+
+{% block scripts %}
+	<script type="text/javascript" src="{{ url_for('static', filename='css/slick/jquery-1.11.0.min.js') }}"></script>
+	<script type="text/javascript" src="{{ url_for('static', filename='css/slick/jquery-migrate-1.2.1.min.js') }}"></script>
+	<script type="text/javascript" src="{{ url_for('static', filename='css/slick/slick.min.js') }}"></script>
+	<script type="text/javascript">
+    $(document).ready(function(){
+			$('.carousel').slick({
+				dots: true,
+				infinite: true,
+				autoplay: true,
+  			autoplaySpeed: 5000,
+				speed: 1000,
+				slidesToShow: 1,
+				adaptiveHeight: true,
+			});
+    });
+  </script>	
+{% endblock scripts %}

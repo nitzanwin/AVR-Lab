@@ -1,0 +1,1150 @@
+{% extends "layout.html" %}
+
+
+{% block styles %} 
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.10.0/bootstrap-table.min.css">
+	<style>
+		#studentsTable tr {
+    	cursor: pointer;
+		}
+		#studentsTable tr label {
+    	cursor: pointer;
+		}
+		#addStudentsModal .fixed-table-toolbar > div {
+			margin-top: 0;
+			padding-top: 0;
+		}
+		/* #### fix for page content shifting left when opening studentsModal #### */
+		.modal {
+   	 overflow-y: auto;
+		}
+		.modal-open {
+			overflow: auto;
+		}
+		.modal-open[style] {
+			padding-right: 0px !important;
+		}
+		/* ########################################################################*/
+		.pagination>.active>a, .pagination>.active>span, .pagination>.active>a:hover, 
+		.pagination>.active>span:hover, .pagination>.active>a:focus, 
+		.pagination>.active>span:focus {
+			font-weight: bold;
+		}
+		
+		#addStudentsModal .pagination>.active>a, #addStudentsModal .pagination>.active>span, #addStudentsModal .pagination>.active>a:hover, 
+		#addStudentsModal .pagination>.active>span:hover, #addStudentsModal .pagination>.active>a:focus, 
+		#addStudentsModal .pagination>.active>span:focus {
+			z-index: 2;
+			color: #fff;
+			cursor: default;
+			background-color: #428bca;
+			border-color: #428bca;
+		}
+		#addStudentsModal .pagination>li>a, #addStudentsModal .pagination>li>span {
+			position: relative;
+			float: left;
+			padding: 6px 12px;
+			margin-left: -1px;
+			line-height: 1.42857143;
+			color: #428bca;
+			text-decoration: none;
+			background-color: #fff;
+			border: 1px solid #ddd;
+		}
+		
+		@media (min-width: 1200px){
+			.container {
+					max-width: 1360px;
+			}
+		}
+
+	</style>
+{% endblock styles %} 
+
+{% block navbar %}
+<a class="navbar-brand px-4" href="{{ url_for('admin') }}">ARVR Lab Managment</a>
+<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+ aria-expanded="false" aria-label="Toggle navigation">
+	<span class="navbar-toggler-icon"></span>
+</button>
+
+<div class="collapse navbar-collapse" id="navbarSupportedContent">
+	<ul class="navbar-nav mr-auto">
+		<li class="nav-item dropdown">
+			<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true"
+			 aria-expanded="false">Admin</a>
+			<div class="dropdown-menu " aria-labelledby="navbarDropdown">
+				<a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a>
+			</div>
+		</li>
+		<li class="nav-item">
+			<a class="nav-link" href="{{ url_for('manageProjects') }}">Projects</a>
+		</li>
+		<li class="nav-item">
+			<a class="nav-link" href="{{ url_for('manageProposedProjects') }}">Proposed Projects</a>
+		</li>
+		<li class="nav-item">
+			<a class="nav-link active" href="{{ url_for('manageStudents') }}">Students</a>
+		</li>
+		<li class="nav-item">
+			<a class="nav-link" href="{{ url_for('manageSupervisors') }}">Supervisors</a>
+		</li>
+	</ul>
+</div>
+{% endblock navbar %}
+
+{% block content %}
+<h1>Students</h1>
+<div class="container">
+	{% with messages = get_flashed_messages(with_categories=true) %} 
+		{% if messages %} 
+			{% for category, message in messages %}
+				{% if editFormErrorStudentId == '' and not editProjectForm.errors %}
+					<div class="alert alert-{{ category }} mt-4">
+						{{ message }}
+					</div>
+				{% endif %}
+			{% endfor %} 
+		{% endif %} 
+	{% endwith %}
+	{% if students %}
+		<table id="table" data-toggle="table" data-search="false" data-pagination="true" data-filter-control="true" data-show-export="false"
+		data-click-to-select="true" data-toolbar="#toolbar" data-pagination-v-align="bottom" data-strict-search="false" data-sort-name="year" data-sort-order="desc">
+			<thead>
+				<tr>
+					<th data-field="profilePic" data-formatter="" data-sortable="false">Profile Picture</th>
+					<th data-field="year" data-filter-control="select" data-sortable="true">Year</th>
+					<th data-field="semester" data-filter-control="select" data-sortable="true">Semester</th>
+					<th data-field="studentId" data-sortable="true">Id</th>
+					<th data-field="firstNameHeb" data-sortable="true" data-filter-control="input">First Name</th>
+					<th data-field="lastNameHeb" data-sortable="true" data-filter-control="input">Last Name</th>
+					<th data-field="project" data-filter-control="select" data-sortable="true">Last Project</th>
+					<th data-field="projectStatus" data-sortable="true">Status</th>
+					
+					<th data-field="id" data-name="id" data-class='hiddenColumn'></th>
+					<th data-field="registrationYear" data-name="registrationYear" data-class='hiddenColumn'></th>
+					<th data-field="registrationSemester" data-name="registrationSemester" data-class='hiddenColumn'></th>
+					<th data-field="firstNameEng" data-name="firstNameEng" data-class='hiddenColumn'></th>
+					<th data-field="lastNameEng" data-name="lastNameEng" data-class='hiddenColumn'></th>
+					<th data-field="email" data-name="email" data-class='hiddenColumn'></th>
+					<th data-field="lastProjects" data-name="lastProjects" data-class='hiddenColumn'></th>
+					<th data-name="btnEdit"></th>
+					<th data-name="btnDelete"></th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for student in students %}
+					<tr>
+						<td data-name="profilePic">
+							{% if student.profilePic %}
+								<img style="width:50px;height:50px;" src="/static/images/profile/{{ student.profilePic }}" alt="{{ student.profilePic }}">						
+							{% else %}
+								<img style="width:50px;height:50px;" src="/static/images/profile/default.png" alt="default profile">						
+							{% endif %}
+						</td>
+						<td data-name="year">
+							{% if student.projectsSortedDesc[0] %}
+								{% for project in student.projectsSortedDesc[0:1] %}
+									{{ project.year }}
+								{% endfor %}
+							{% else %}
+								----
+							{% endif %}
+						</td>
+						<td data-name="semester">
+							{% if student.projectsSortedDesc[0] %}
+								{% for project in student.projectsSortedDesc[0:1] %}
+									{{ project.semester }}
+								{% endfor %}
+							{% else %}
+								----
+							{% endif %}
+						</td>
+						<td data-name="studentId">{{ student.studentId }}</td>				
+						<td data-name="firstNameHeb">{{ student.firstNameHeb }}</td>						
+						<td data-name="lastNameHeb">{{ student.lastNameHeb }}</td>								
+						<td data-name="project">
+							{% if student.projectsSortedDesc[0] %}
+								{% for project in student.projectsSortedDesc[0:1] %}
+									<a href="javascript:void(0);" onclick="handleEditProject(this)" class="badge badge-primary px-2" data-projectid="{{ project.id }}" name="studentProjectBadge" style="background-color: #9d6bff;padding: 1em 0;">
+										{{ project.title }}
+									</a>
+								{% endfor %}
+							{% else %}
+								<a href="javascript:void(0);" class="badge badge-warning px-2" style="padding: 1em 0;">
+									NO PROJECT
+								</a>
+							{% endif %}
+						</td>
+						<td data-name="projectStatus">
+							{% if student.projectsSortedDesc[0] %}
+								{% for project in student.projectsSortedDesc[0:1] %}
+									{{ project.status }}
+								{% endfor %}
+							{% endif %}
+						</td>
+						<td data-name="id">{{ student.id }}</td>
+						<td data-name="registrationYear">{{ student.year }}</td>
+						<td data-name="registrationSemester">{{ student.semester }}</td>
+						<td data-name="firstNameEng">{{ student.firstNameEng }}</td>						
+						<td data-name="lastNameEng">{{ student.lastNameEng }}</td>	
+						<td data-name="email">{{ student.email }}</td>	
+						<td data-name="lastProjects">
+							{% for project in student.projectsSortedDesc %}
+								{{ project.id }},{{ project.title }}:
+							{% endfor %}
+						</td>	
+						<td data-name="btnEdit" data-studentid="{{ student.id }}"><button type='button' onclick='handleEdit({{ student.id }})' name='btnEdit' class='btn btn-primary' data-toggle='modal' data-target='#editModal'><i class='fa fa-edit fa-fw'></i> Edit</button></td>
+						<td data-name="btnDelete" data-studentid="{{ student.id }}"><button type='button' onclick='handleDeleteStudent(this)' name='btnDelete' class='btn btn-danger' data-toggle='modal' data-target='#deleteModal'><i class='fa fa-trash fa-fw'></i> Delete</button></td>
+					</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	{% else %}
+		<h6>Looks like there are no students yet... <span style="font-size:1.3em;">😁</span></h6>
+	{% endif %}
+
+	<!-- #################	Edit Student modal	################# -->
+	<div class="modal fade bg" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content" style="color: #000;">
+				<div class="modal-header">
+					<h5 class="modal-title" id="editModalLabel">Edit Student</h5>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				{% with messages = get_flashed_messages(with_categories=true) %}
+					{% if messages and editFormErrorStudentId %}
+						{% for category, message in messages %}
+							{% if category!="success" %}
+								<div class="alert alert-{{ category }}">
+									{{ message }}
+								</div>
+							{% endif %}
+						{% endfor %}
+					{% endif %}
+				{% endwith %}
+				<form class="form" id="editForm" method="POST" action="{{ url_for('manageStudents') }}">
+					<input type="hidden" name="sentFormName" value="editForm">
+					<div class="modal-body">
+						{{ editForm.hidden_tag() }}
+						<div class="form-group row">
+								{{ editForm.studentId.label(class="col-md-3 col-form-label") }}
+								<div class="col-md-7 my-auto">
+									{% if editForm.studentId.errors %} 
+										{{ editForm.studentId(class="form-control is-invalid") }}
+										<div class="invalid-feedback">
+											{% for error in editForm.studentId.errors %}
+												<span>{{ error }}</span>
+											{% endfor %}
+										</div>
+									{% else %}
+										{{ editForm.studentId(class="form-control") }} 
+									{% endif %}		
+								</div>
+						</div>
+
+						<div class="form-group row">
+								<label class="col-md-3 col-form-label">Registration Year</label>
+								<div class="col-md-7 my-auto">
+									<select id="year" class="custom-select form-control" disabled>
+										<option></option>
+									</select>
+								</div>
+						</div>
+
+						<div class="form-group row">
+							<label class="col-md-3 col-form-label">Registration Semester</label>
+							<div class="col-md-7 my-auto">
+								<select id="semester" class="custom-select form-control" disabled>
+									<option></option>
+								</select>
+							</div>
+						</div>
+
+						<div class="form-group row">
+								{{ editForm.firstNameHeb.label(class="col-md-3 col-form-label") }}
+								<div class="col-md-7 my-auto">
+									{% if editForm.firstNameHeb.errors %} 
+										{{ editForm.firstNameHeb(class="form-control is-invalid") }}
+										<div class="invalid-feedback">
+											{% for error in editForm.firstNameHeb.errors %}
+												<span>{{ error }}</span>
+											{% endfor %}
+										</div>
+									{% else %}
+										{{ editForm.firstNameHeb(class="form-control") }} 
+									{% endif %}		
+								</div>
+						</div>
+
+						<div class="form-group row">
+							{{ editForm.lastNameHeb.label(class="col-md-3 col-form-label") }}
+							<div class="col-md-7 my-auto">
+								{% if editForm.lastNameHeb.errors %} 
+									{{ editForm.lastNameHeb(class="form-control is-invalid") }}
+									<div class="invalid-feedback">
+										{% for error in editForm.lastNameHeb.errors %}
+											<span>{{ error }}</span>
+										{% endfor %}
+									</div>
+								{% else %}
+									{{ editForm.lastNameHeb(class="form-control") }} 
+								{% endif %}		
+							</div>
+						</div>
+
+						<div class="form-group row">
+							{{ editForm.firstNameEng.label(class="col-md-3 col-form-label") }}
+							<div class="col-md-7 my-auto">
+								{% if editForm.firstNameEng.errors %} 
+									{{ editForm.firstNameEng(class="form-control is-invalid") }}
+									<div class="invalid-feedback">
+										{% for error in editForm.firstNameEng.errors %}
+											<span>{{ error }}</span>
+										{% endfor %}
+									</div>
+								{% else %}
+									{{ editForm.firstNameEng(class="form-control") }} 
+								{% endif %}		
+							</div>
+						</div>
+
+						<div class="form-group row">
+							{{ editForm.lastNameEng.label(class="col-md-3 col-form-label") }}
+							<div class="col-md-7 my-auto">
+								{% if editForm.lastNameEng.errors %} 
+									{{ editForm.lastNameEng(class="form-control is-invalid") }}
+									<div class="invalid-feedback">
+										{% for error in editForm.lastNameEng.errors %}
+											<span>{{ error }}</span>
+										{% endfor %}
+									</div>
+								{% else %}
+									{{ editForm.lastNameEng(class="form-control") }} 
+								{% endif %}		
+							</div>
+						</div>
+
+						<div class="form-group row">
+							{{ editForm.email.label(class="col-md-3 col-form-label") }}
+							<div class="col-md-7 my-auto">
+								{% if editForm.email.errors %} 
+									{{ editForm.email(class="form-control is-invalid") }}
+									<div class="invalid-feedback">
+										{% for error in editForm.email.errors %}
+											<span>{{ error }}</span>
+										{% endfor %}
+									</div>
+								{% else %}
+									{{ editForm.email(class="form-control") }} 
+								{% endif %}		
+							</div>
+						</div>
+
+						<div class="form-group row">
+							<label class="col-md-3 col-form-label" for="profilePic">Profile Picture</label>
+							<div class="col-md-7 my-auto">
+								<img id="profilePic" style="max-width:100%;	width: auto;height: 250px;">
+							</div>
+						</div>
+
+						<div class="form-group row">
+							<label class="col-md-3 col-form-label" for="lastProjects">Last Projects</label>
+							<div class="col-md-7 my-auto" id="lastProjects">
+							</div>
+						</div>
+				</div>
+
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+						{{ editForm.submitEditForm(class="btn btn-success") }}
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+	<!-- ######################################################### -->
+
+		<!-- #################	Edit Project modal	################# -->
+	<div class="modal fade bg" id="editProjectModal" tabindex="-1" role="dialog" aria-labelledby="editProjectModalLabel" aria-hidden="true">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content" style="color: #000;">
+				<div class="modal-header">
+					<h5 class="modal-title" id="editProjectModalLabel">Edit Project</h5>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				{% with messages = get_flashed_messages(with_categories=true) %}
+					{% if messages and editProjectErrorId %}
+						{% for category, message in messages %}
+							{% if category!="success" %}
+								<div class="alert alert-{{ category }}">
+									{{ message }}
+								</div>
+							{% endif %}
+						{% endfor %}
+					{% endif %}
+				{% endwith %}
+				<form class="form" id="editProjectForm" method="POST" action="{{ url_for('manageProjects') }}" enctype="multipart/form-data">
+					<input type="hidden" name="sentFormName" value="editForm">
+					<input type="hidden" name="studentsReferrer" value="1">
+					<div class="modal-body">
+						{{ editProjectForm.hidden_tag() }}
+
+						<div class="form-group row">
+							{{ editProjectForm.title.label(class="col-md-3 col-form-label") }} 
+							<div class="col-md-7">
+								{% if editProjectForm.title.errors %} 
+									{{ editProjectForm.title(class="form-control is-invalid") }}
+									<div class="invalid-feedback">
+										{% for error in editProjectForm.title.errors %}
+											<span>{{ error }}</span>
+										{% endfor %}
+									</div>
+								{% else %} 
+									{{ editProjectForm.title(class="form-control") }} 
+								{% endif %}
+							</div>
+						</div>
+						
+						<div class="form-group row">
+							<div class="col-md-3 col-form-label">Students</div>
+							<div name="studentsList" class="col-md-7" style="text-align: right;direction: rtl;">
+							</div>
+						</div>
+
+						
+						<div class="form-group row">
+							{{ editProjectForm.year.label(class="col-md-3 col-form-label") }} 
+							<div class="col-md-7">
+								{% if editProjectForm.year.errors %} 
+									{{ editProjectForm.year(class="custom-select form-control is-invalid") }}
+									<div class="invalid-feedback">
+										{% for error in editProjectForm.year.errors %}
+											<span>{{ error }}</span>
+										{% endfor %}
+									</div>
+								{% else %} 
+									{{ editProjectForm.year(class="custom-select form-control") }} 
+								{% endif %}
+							</div>
+						</div>
+
+						<div class="form-group row">
+							{{ editProjectForm.semester.label(class="col-md-3 col-form-label") }} 
+							<div class="col-md-7">
+								{% if editProjectForm.semester.errors %} 
+									{{ editProjectForm.semester(class="custom-select form-control is-invalid") }}
+									<div class="invalid-feedback">
+										{% for error in editProjectForm.semester.errors %}
+											<span>{{ error }}</span>
+										{% endfor %}
+									</div>
+								{% else %} 
+									{{ editProjectForm.semester(class="custom-select form-control") }} 
+								{% endif %}
+							</div>
+						</div>
+
+						<div class="form-group row">
+							{{ editProjectForm.supervisor1.label(class="col-md-3 col-form-label") }} 
+							<div class="col-md-7">
+								{% if editProjectForm.supervisor1.errors %} 
+									{{ editProjectForm.supervisor1(class="custom-select form-control is-invalid") }}
+									<div class="invalid-feedback">
+										{% for error in editProjectForm.supervisor1.errors %}
+											<span>{{ error }}</span>
+										{% endfor %}
+									</div>
+								{% else %} 
+									{{ editProjectForm.supervisor1(class="custom-select form-control") }} 
+								{% endif %}
+							</div>
+						</div>
+						
+						<div class="form-group row">
+							{{ editProjectForm.supervisor2.label(class="col-md-3 col-form-label") }} 
+							<div class="col-md-7">
+								{% if editProjectForm.supervisor2.errors %} 
+									{{ editProjectForm.supervisor2(class="custom-select form-control is-invalid") }}
+									<div class="invalid-feedback">
+										{% for error in editProjectForm.supervisor2.errors %}
+											<span>{{ error }}</span>
+										{% endfor %}
+									</div>
+								{% else %} 
+									{{ editProjectForm.supervisor2(class="custom-select form-control") }} 
+								{% endif %}
+							</div>
+						</div>
+
+						<div class="form-group row">
+							{{ editProjectForm.supervisor3.label(class="col-md-3 col-form-label") }} 
+							<div class="col-md-7">
+								{% if editProjectForm.supervisor3.errors %} 
+									{{ editProjectForm.supervisor3(class="custom-select form-control is-invalid") }}
+									<div class="invalid-feedback">
+										{% for error in editProjectForm.supervisor3.errors %}
+											<span>{{ error }}</span>
+										{% endfor %}
+									</div>
+								{% else %} 
+									{{ editProjectForm.supervisor3(class="custom-select form-control") }} 
+								{% endif %}
+							</div>
+						</div>
+
+						<div class="form-group row">
+							{{ editProjectForm.comments.label(class="col-md-3 col-form-label") }} 
+							<div class="col-md-7">
+								{% if editProjectForm.comments.errors %} 
+									{{ editProjectForm.comments(class="form-control is-invalid", rows="6", style="height:100%;direction:rtl;") }}
+									<div class="invalid-feedback">
+										{% for error in editProjectForm.comments.errors %}
+											<span>{{ error }}</span>
+										{% endfor %}
+									</div>
+								{% else %} 
+									{{ editProjectForm.comments(class="form-control", rows="6", style="height:100%;direction:rtl;") }} 
+								{% endif %}
+							</div>
+						</div>
+
+						<div class="form-group row">
+							{{ editProjectForm.image.label(class="col-md-3") }} 
+							<div class="col-md-6">
+								{% if editProjectForm.image.errors %} 
+								{{ editProjectForm.image(class="custom-file-input is-invalid") }}
+									<div class="invalid-feedback">
+										{% for error in editProjectForm.image.errors %}
+											<span>{{ error }}</span>
+										{% endfor %}
+									</div>
+								{% else %} 
+									{{ editProjectForm.image(class="custom-file-input") }} 
+								{% endif %}
+								<label class="custom-file-label text-left" for="image">Choose file</label>	
+							</div>								
+						</div>
+
+						<div class="form-group row">
+							{{ editProjectForm.grade.label(class="col-md-3 col-form-label") }} 
+							<div class="col-md-3">
+								{% if editProjectForm.grade.errors %} 
+									{{ editProjectForm.grade(class="form-control is-invalid") }}
+									<div class="invalid-feedback">
+										{% for error in editProjectForm.grade.errors %}
+											<span>{{ error }}</span>
+										{% endfor %}
+									</div>
+								{% else %} 
+									{{ editProjectForm.grade(class="form-control") }} 
+								{% endif %}
+							</div>
+							<div class="col-md-4"></div>
+						</div>
+
+						<div class="form-group row">
+							<div class="col-md-3 col-form-label">Status</div>
+							<div class="col-md-7" style="text-align: right;direction:rtl;">
+								<div class="custom-control custom-checkbox px-2 py-1 mb-2 project-status-stage" style="background-color: rgba(117, 225, 131, 0.36);">
+									<input class="custom-control-input" id="firstStage" type="checkbox" checked>
+									<label class="custom-control-label checkbox-inline font-weight-bold" for="firstStage">1. הרשמה</label>
+								</div>
+
+								<div class="custom-control custom-checkbox px-2 py-1 project-status-stage">
+									<input class="custom-control-input" id="secondStage" type="checkbox">
+									<label class="custom-control-label checkbox-inline font-weight-bold" for="secondStage">2. התנעה</label>
+								</div>
+									<div class="custom-control custom-checkbox" style="margin-right: 2em;">
+										{{ editProjectForm.requirementsDoc(class="custom-control-input") }}
+										{{ editProjectForm.requirementsDoc.label(class="custom-control-label checkbox-inline") }}
+									</div>
+									<div class="custom-control custom-checkbox mb-2" style="margin-right: 2em;">
+										{{ editProjectForm.firstMeeting(class="custom-control-input") }}
+										{{ editProjectForm.firstMeeting.label(class="custom-control-label checkbox-inline") }}
+									</div>
+
+								<div class="custom-control custom-checkbox px-2 py-1 project-status-stage">
+									<input class="custom-control-input" id="thirdStage" type="checkbox">
+									<label class="custom-control-label checkbox-inline font-weight-bold" for="thirdStage">3. אמצע</label>
+								</div>
+									<div class="custom-control custom-checkbox mb-2" style="margin-right: 2em;">
+										{{ editProjectForm.halfwayPresentation(class="custom-control-input") }}
+										{{ editProjectForm.halfwayPresentation.label(class="custom-control-label checkbox-inline") }}
+									</div>
+								
+								<div class="custom-control custom-checkbox px-2 py-1 project-status-stage">
+									<input class="custom-control-input" id="fourthStage" type="checkbox">
+									<label class="custom-control-label checkbox-inline font-weight-bold" for="fourthStage">4. סיום</label>
+								</div>
+									<div class="custom-control custom-checkbox" style="margin-right: 2em;">
+										{{ editProjectForm.finalMeeting(class="custom-control-input") }}
+										{{ editProjectForm.finalMeeting.label(class="custom-control-label checkbox-inline") }}
+									</div>
+									<div class="custom-control custom-checkbox" style="margin-right: 2em;">
+										{{ editProjectForm.projectReport(class="custom-control-input") }}
+										{{ editProjectForm.projectReport.label(class="custom-control-label checkbox-inline") }}
+									</div>
+									<div class="custom-control custom-checkbox" style="margin-right: 2em;">
+										{{ editProjectForm.equipmentReturned(class="custom-control-input") }}
+										{{ editProjectForm.equipmentReturned.label(class="custom-control-label checkbox-inline") }}
+									</div>
+									<div class="custom-control custom-checkbox" style="margin-right: 2em;">
+										{{ editProjectForm.projectDoc(class="custom-control-input") }}
+										{{ editProjectForm.projectDoc.label(class="custom-control-label checkbox-inline") }}
+									</div>
+									<div class="custom-control custom-checkbox" style="margin-right: 2em;">
+										{{ editProjectForm.gradeStatus(class="custom-control-input") }}
+										{{ editProjectForm.gradeStatus.label(class="custom-control-label checkbox-inline") }}
+									</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+						{{ editProjectForm.submitEditForm(class="btn btn-success") }}
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+	<!-- ######################################################## -->
+
+	<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+			<div class="modal-dialog" role="document">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" id="deleteModalLabel">Delete Student</h5>
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
+					</div>
+					<div class="modal-body">
+						Are you sure?
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
+						<button type="button" onclick='document.getElementById("deleteForm").submit()' class="btn btn-primary">Yes</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+	<!-- ###################  addStudentsModal #################################### -->
+	<div class="modal fade bg" id="addStudentsModal" data-backdrop="true" tabindex="-1" role="dialog" aria-labelledby="addStudentsModalLabel" aria-hidden="true">
+		<div class="modal-dialog modal-lg" role="document">
+			<div class="modal-content" style="color: #000;">
+				<div class="modal-header">
+					<h5 class="modal-title" id="addStudentsModalLabel">Add Students</h5>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				
+				<div class="modal-body">
+					<table id="studentsTable" data-toggle="table" data-search="false" data-pagination="true" data-filter-control="true" data-show-export="false"
+	data-click-to-select="true" data-pagination-v-align="bottom" data-strict-search="false">
+						<thead>
+							<tr>
+								<!-- <th data-field="selectStatus" data-sortable="true">Select</th> -->
+								<th data-field="profilePic" data-formatter="" data-sortable="false">Profile Picture</th>
+								<th data-field="registrationYear" data-filter-control="select" data-sortable="true">Year</th>
+								<th data-field="registrationSemester" data-filter-control="select" data-sortable="true">Semester</th>
+								<th data-field="studentId" data-sortable="true">Id</th>
+								<th data-field="firstNameHeb" data-sortable="true" data-filter-control="input">First Name</th>
+								<th data-field="lastNameHeb" data-sortable="true" data-filter-control="input">Last Name</th>
+
+								<th data-name="firstNameEng" data-class='hiddenColumn'></th>
+								<th data-name="lastNameEng" data-class='hiddenColumn'></th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for student in students %}
+								<tr data-id='{{ student.id }}'>
+								<!-- <td data-name="selectStatus"><i class="far fa-square"></i></td> -->
+								<td data-name="profilePic">
+									{% if student.profilePic %}
+										<img style="width:50px;height:50px;" src="/static/images/profile/{{ student.profilePic }}" alt="{{ student.profilePic }}">						
+									{% else %}
+										<img style="width:50px;height:50px;" src="/static/images/profile/default.png" alt="default profile">						
+									{% endif %}
+								</td>
+								<td data-name="registrationYear">{{ student.year }}</td>
+								<td data-name="registrationSemester">{{ student.semester }}</td>
+								<td data-name="studentId">{{ student.studentId }}</td>				
+								<td data-name="firstNameHeb">{{ student.firstNameHeb }}</td>
+								<td data-name="lastNameHeb">{{ student.lastNameHeb }}</td>
+								
+								<td data-name="firstNameEng">{{ student.firstNameEng }}</td>
+								<td data-name="lastNameEng">{{ student.lastNameEng }}</td>	
+							</tr>
+							{% endfor %}
+						</tbody>
+					</table>
+					
+				</div>
+
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+						<button type="button" class="btn btn-success" id="btnSaveStudentChanges" onclick='addSelectedStudents()' data-dismiss="modal">Save</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+	<!-- #################### end of addStudentsModal  ######################### -->
+
+	<form id="deleteForm" method="POST" action="{{ url_for('manageStudents') }}/Delete">
+		{{ deleteForm.hidden_tag() }}
+	</form>
+</div>
+<!-- script to display the filename when choosing a profile picture -->
+{% endblock content %}
+
+{% block scripts %}
+	<script src="/static/js/bootstrap-table.js"></script>
+	<script src="/static/js/bootstrap-table-filter-control.js"></script>
+
+	<script>
+		/* show file name in the input box when selecting a file */
+		$('#image').on('change',function(){
+			let fileName = $(this).val().split('\\').pop(); 
+			$(this).next('.custom-file-label').addClass("selected").html(fileName); 
+		})
+
+
+		function handleDeleteStudent(e){
+			studentId = $(e).parent().siblings("td[data-name='id']").text();
+			$("#deleteForm").find('#deleteStudentId').val(studentId);
+		}
+
+		function handleEdit(id) {
+			// get the values from the row
+			var table = $('#table').bootstrapTable('getOptions');
+			var currentRow;
+			table.data.forEach(function(dataRow){
+				if (dataRow.id == id) {
+					currentRow = dataRow;
+				}
+			});
+
+			var id = currentRow.id.trim();
+			var studentId = currentRow.studentId.trim();
+			var year = currentRow.registrationYear.trim();
+			var semester = currentRow.registrationSemester.trim();
+			var email = currentRow.email.trim();
+			var firstNameEng = currentRow.firstNameEng.trim();
+			var lastNameEng = currentRow.lastNameEng.trim();
+			var firstNameHeb = currentRow.firstNameHeb.trim();
+			var lastNameHeb = currentRow.lastNameHeb.trim();
+			var lastProjects = currentRow.lastProjects.trim();
+			lastProjects = lastProjects.split(':').map(s => s.trim());
+			var profilePicSrc = $(currentRow.profilePic).attr("src");
+			
+			$("#editForm #id").val(id);
+			$("#editForm #studentId").val(studentId);
+			
+			$("#year option:first").val(year);	
+			$("#year option:first").text(year);	
+			$("#semester option:first").val(semester);	
+			$("#semester option:first").text(semester);	
+
+			$("#editForm #email").val(email);
+			$("#editForm #firstNameEng").val(firstNameEng);
+			$("#editForm #lastNameEng").val(lastNameEng);
+			$("#editForm #firstNameHeb").val(firstNameHeb);
+			$("#editForm #lastNameHeb").val(lastNameHeb);
+			$("#editForm img#profilePic").attr("src", profilePicSrc);	
+			
+			// fill in last projects
+			$("#editModal #lastProjects").empty();
+			if (lastProjects[0]) {
+				lastProjects.forEach(function(project, index) {
+					if(project) {
+						var studentProject = project.split(',').map(p => p.trim());
+						var projectBtn = '<div><a href="javascript:void(0);" onclick="handleEditProject(this)" data-projectid="'+studentProject[0]+'" class="badge badge-primary px-2 mt-2" style="background-color: #9d6bff;padding: 1em 0;">'+studentProject[1]+'</a></div>';
+						$("#editModal #lastProjects").append(projectBtn);
+					}
+				});	
+				
+			}
+			else {
+				$("#editModal #lastProjects").append("<small>No projects</small>");
+			}	
+		}
+
+		var selectedStudentsInEditModal = [];
+		var selectedStudentsInEditModalBeforeChange = [];
+
+		var studentChangesSaved = false;
+		var tabledCleaned = false;
+
+		var coursesList = [
+			{% for course in courses %}
+				{% if loop.index > 1 %},{% endif %}
+				{	
+					id: {{ course.id }},
+					number: {{ course.number }}
+				}
+			{% endfor %}
+		];
+
+		{% if defaultCourseId %}
+			var defaultCourseId = {{ defaultCourseId }};
+		{% else %}
+			var defaultCourseId = ' ';
+		{% endif %}
+
+
+		function handleEditProject(e) {
+			var editModalZIndex = parseInt($("#editModal").css("z-index"));
+			$("#editProjectModal").css("z-index", editModalZIndex+1);
+			$("#addStudentsModal").css("z-index", editModalZIndex+2);
+			
+			var projectId = $(e).data("projectid");
+			var xmlhttp = new XMLHttpRequest();
+			var url = "/Admin/Projects/"+projectId+"/json";
+			xmlhttp.onreadystatechange = function () {
+				if (this.readyState == 4 && this.status == 200) {
+					var data = JSON.parse(this.responseText);
+					fillInEditProject(data[0]);
+				}
+			};
+			xmlhttp.open("POST", url, true);
+			xmlhttp.send();
+		}
+
+		function fillInEditProject(project) {
+			$("#editProjectForm #projectId").val(project.id);
+			$("#editProjectForm #title").val(project.title);
+			if ($("#editProjectForm #year option[value='"+project.year+"']").length == 0) {
+				$("#editProjectForm #year").prepend("<option value='"+project.year+"' selected='selected'>"+project.year+"</option>");
+			}
+			$("#editProjectForm #year").val(project.year);	
+			$("#editProjectForm #semester").val(project.semester);	
+			$("#editProjectForm #comments").val(project.comments);
+			$("#editProjectForm #grade").val(project.grade);
+
+			// clear students list and add all the students in the project
+ 			selectedStudentsInEditModal = [];
+			$("#editProjectForm div[name='studentsList']").empty();	
+			if (project.studentsNamesHeb[0]) {
+				var htmlContent = '<table class="table table-sm text-right"><tbody>';
+					project.studentsNamesHeb.forEach(function(studentName, index) {
+					var courseOptions = '<td><select name="studentsCoursesIds" class="custom-select form-control my-auto" style="width:auto;height:2.3em;font-size:0.7em;">';
+					coursesList.forEach(function(course) {
+						if (project.studentsCourseIds[index] == course.id) {
+							courseOptions += "<option value='"+course.id+"' selected>"+course.number+"</option>";
+						}
+						else {
+							courseOptions += "<option value='"+course.id+"'>"+course.number+"</option>";
+						}
+					});	
+					courseOptions += '</select></td>';
+
+					var studentRow = "<tr><td><input type='hidden' name='students' value='"+project.studentsIds[index]+"'><button type='button' name='btnRemoveStudent' onclick='removeStudentFromList(this)' class='btn btn-danger btn-sm' style='padding: 1px 4px;'><i class='fa fa-remove'></i></button><span name='studentName'><a href='javascript:void(0)' onclick='openStudentFromEditProject("+project.studentsIds[index]+")' class='badge badge-light py-1' style='font-size:1em; white-space: normal;'>"+studentName+"</a></span></td>"+courseOptions+"</tr>";
+					htmlContent += studentRow;
+					selectedStudentsInEditModal.push({
+						id: parseInt(project.studentsIds[index]),
+						fullNameHeb: studentName
+					});
+				});
+				htmlContent += '<tr><td colspan="2"><button type="button" name="btnAddStudents" class="btn btn-success mt-2"><i class="fa fa-plus-circle fa-fw"></i> הוסף</button></td></tr></tbody></table>';
+				$("#editProjectForm div[name='studentsList']").append(htmlContent);
+			} 
+			selectedStudentsInEditModalBeforeChange = selectedStudentsInEditModal.slice();
+			
+			// clear supervisors and set project's supervisors
+			$("#editProjectForm #supervisor1").val('')
+			$("#editProjectForm #supervisor2").val('')
+			$("#editProjectForm #supervisor3").val('')
+			if (project.supervisorsIds[0]){
+				project.supervisorsIds.forEach(function (supervisorId, index) {
+					$("#editProjectForm #supervisor"+(index+1)).val(supervisorId);
+				});
+			}
+		
+			/* ################## fill in project status checkboxes ################## */
+
+			$('#editProjectForm #requirementsDoc').prop('checked', project.requirementsDoc===true); 
+			$('#editProjectForm #firstMeeting').prop('checked', project.firstMeeting===true); 
+			$('#editProjectForm #halfwayPresentation').prop('checked', project.halfwayPresentation===true); 
+			$('#editProjectForm #finalMeeting').prop('checked', project.finalMeeting===true); 
+			$('#editProjectForm #projectReport').prop('checked', project.projectReport===true); 
+			$('#editProjectForm #equipmentReturned').prop('checked', project.equipmentReturned===true); 
+			$('#editProjectForm #projectDoc').prop('checked', project.projectDoc===true); 
+			$('#editProjectForm #gradeStatus').prop('checked', project.gradeStatus===true); 
+			
+			/* #################### fill in project status stages #################### */
+			if (project.requirementsDoc === true && project.firstMeeting === true) {
+				$('#secondStage').prop('checked', true);
+				$('#secondStage').parent().css("background-color", "rgba(117, 225, 131, 0.36)");
+			}
+			else {
+				$('#secondStage').prop('checked', false);
+				$('#secondStage').parent().css("background-color", "rgba(91, 195, 242, 0.25)");
+			}
+
+			if (project.halfwayPresentation === true) {
+				$('#thirdStage').prop('checked', true);
+				$('#thirdStage').parent().css("background-color", "rgba(117, 225, 131, 0.36)");
+			}
+			else {
+				$('#thirdStage').prop('checked', false);
+				$('#thirdStage').parent().css("background-color", "rgba(91, 195, 242, 0.25)");
+			}
+
+			if (project.finalMeeting === true && project.projectReport === true && project.equipmentReturned === true && project.projectDoc === true && project.gradeStatus === true) {
+				$('#fourthStage').prop('checked', true);
+				$('#fourthStage').parent().css("background-color", "rgba(117, 225, 131, 0.36)");
+			}
+			else {
+				$('#fourthStage').prop('checked', false);
+				$('#fourthStage').parent().css("background-color", "rgba(91, 195, 242, 0.25)");
+			}
+			/* ######################################################################## */
+			
+
+			$('#editProjectModal').modal("show");
+		}
+
+		/* #################### Color project stages automatically ####################*/
+		/* ---------------------------- editModal ---------------------------- */
+		$('#editProjectForm #requirementsDoc, #editProjectForm #firstMeeting').change(function() {
+			var requirementsDoc = $('#editProjectForm #requirementsDoc').is(':checked');
+			var firstMeeting = $('#editProjectForm #firstMeeting').is(':checked');
+			if (requirementsDoc && firstMeeting) {
+				$('#editProjectForm #secondStage').prop('checked', true);
+				$('#editProjectForm #secondStage').parent().css("background-color", "rgba(117, 225, 131, 0.36)");
+			}
+			else {
+				$('#editProjectForm #secondStage').prop('checked', false);
+				$('#editProjectForm #secondStage').parent().css("background-color", "rgba(91, 195, 242, 0.25)");
+			}
+		});
+
+		$('#editProjectForm #halfwayPresentation').change(function() {
+			var halfwayPresentation = $('#editProjectForm #halfwayPresentation').is(':checked');
+			if (halfwayPresentation) {
+				$('#editProjectForm #thirdStage').prop('checked', true);
+				$('#editProjectForm #thirdStage').parent().css("background-color", "rgba(117, 225, 131, 0.36)");
+			}
+			else {
+				$('#editProjectForm #thirdStage').prop('checked', false);
+				$('#editProjectForm #thirdStage').parent().css("background-color", "rgba(91, 195, 242, 0.25)");
+			}
+		});
+
+		$('#editProjectForm #finalMeeting, #editProjectForm #projectReport, #editProjectForm #equipmentReturned, #editProjectForm #projectDoc, #editProjectForm #gradeStatus').change(function() {
+			var finalMeeting = $('#editProjectForm #finalMeeting').is(':checked');
+			var projectReport = $('#editProjectForm #projectReport').is(':checked');
+			var equipmentReturned = $('#editProjectForm #equipmentReturned').is(':checked');
+			var projectDoc = $('#editProjectForm #projectDoc').is(':checked');
+			var gradeStatus = $('#editProjectForm #gradeStatus').is(':checked');
+			if (finalMeeting && projectReport && equipmentReturned && projectDoc && gradeStatus) {
+				$('#editProjectForm #fourthStage').prop('checked', true);
+				$('#editProjectForm #fourthStage').parent().css("background-color", "rgba(117, 225, 131, 0.36)");
+			}
+			else {
+				$('#editProjectForm #fourthStage').prop('checked', false);
+				$('#editProjectForm #fourthStage').parent().css("background-color", "rgba(91, 195, 242, 0.25)");
+			}
+		});
+		
+		// fill in gradeStatus checkbox automatically when user inputs a grade
+		$('#editProjectForm #grade').keyup(function() {
+			if($(this).val()) {
+				if(! $('#editProjectForm #gradeStatus').is(':checked')){
+					$('#editProjectForm #gradeStatus').click();
+				}
+			}
+			else {
+				if($('#editProjectForm #gradeStatus').is(':checked')){
+					$('#editProjectForm #gradeStatus').click();
+				}
+			}
+		});
+
+		/* ###### prevent user from checking/unchecking stages checkboxes ###### */
+			$("#firstStage, #secondStage, #thirdStage, #fourthStage").on('click', function(e) {
+				e.stopPropagation();
+				return false;
+		});
+		/* ###################################################################### */
+
+		function openStudentFromEditProject(id) {
+			var editProjectZIndex = parseInt($("#editProjectModal").css("z-index"));
+			$("#editModal").css("z-index", editProjectZIndex+1);
+			
+			handleEdit(id);
+			$('#editModal').modal("show");
+		}
+
+		function removeStudentFromList(e) {
+			var id = parseInt($(e).siblings("input[name='students']").val());
+			selectedStudentsInEditModal = selectedStudentsInEditModal.filter(student => student.id !== id);
+	
+			$(e).closest("tr").remove();
+		}
+
+
+		function addSelectedStudents() {
+			studentChangesSaved = true;
+			var baseElement = $("#editProjectModal div[name='studentsList']");
+			baseElement.empty();
+
+			var htmlContent = '<table class="table table-sm"><tbody>';
+			var courseOptions = '<td><select name="studentsCoursesIds" class="custom-select form-control my-auto" style="width:auto;height:2.3em;font-size:0.7em;">';
+			coursesList.forEach(function(course) {
+				if (defaultCourseId == course.id) {
+					courseOptions += "<option value='"+course.id+"' selected>"+course.number+"</option>";
+				}
+				else {
+					courseOptions += "<option value='"+course.id+"'>"+course.number+"</option>";
+				}
+			});	
+			courseOptions += '</select></td>';
+
+			selectedStudentsInEditModal.forEach(function (student, index) {
+				var studentRow = "<tr><td><input type='hidden' name='students' value='"+student.id+"'><button type='button' name='btnRemoveStudent' onclick='removeStudentFromList(this)' class='btn btn-danger btn-sm' style='padding: 1px 4px;'><i class='fa fa-remove'></i></button><span name='studentName'><a href='javascript:void(0)' onclick='openStudentFromEditProject("+student.id+")' class='badge badge-light py-1' style='font-size:1em; white-space: normal;'>"+student.fullNameHeb+"</a></span></td>"+courseOptions+"</tr>";
+				htmlContent += studentRow;		
+			});
+			
+			htmlContent += '<tr><td colspan="2"><button type="button" name="btnAddStudents" class="btn btn-success mt-2"><i class="fa fa-plus-circle fa-fw"></i> הוסף</button></td></tr></tbody></table>';
+			baseElement.append(htmlContent);
+
+
+			// restore chosen course numbers for students still existing after changes
+			selectedStudentsInEditModalBeforeChange.forEach(function(student, index) {
+				// the student still in the list after changes
+				if ($("#editProjectForm input[name='students'][value='"+student.id+"']").length > 0) {
+					$("#editProjectForm input[name='students'][value='"+student.id+"']").closest("td").next().find("select").val(student.courseId);
+				}
+			});
+		}
+
+		$('#studentsTable').on('click-row.bs.table', function (e, row, element) {
+			var id = $(element).data("id");
+			var firstNameHeb = $(element).find("td[data-name='firstNameHeb']").text();
+			var lastNameHeb = $(element).find("td[data-name='lastNameHeb']").text();
+			var tableData = $('#studentsTable').bootstrapTable('getData');
+			
+			var rowIndex;
+			for (var key in tableData) {
+				if (tableData[key]["_data"]["id"] === id) {
+					rowIndex = key;
+				}
+			}
+
+			if ($(element).hasClass("student-selected")) {
+				selectedStudentsInEditModal = selectedStudentsInEditModal.filter(student => student.id !== id);
+			}
+			else {
+				selectedStudentsInEditModal.push({
+					id: id,
+					fullNameHeb: firstNameHeb + " " + lastNameHeb
+				});
+			}
+			$(element).toggleClass("student-selected");
+		});
+
+		$(document).on("click","#editProjectModal button[name='btnAddStudents']",function(event) {
+			$('#studentsTable').bootstrapTable('refreshOptions', {});
+			$('#studentsTable').bootstrapTable('selectPage', 1);
+			tabledCleaned = false;
+			// save students list before changes
+			selectedStudentsInEditModalBeforeChange = selectedStudentsInEditModal.slice();
+			selectedStudentsInEditModalBeforeChange.forEach(function(student, index) {
+				var studentCourseId = $("#editProjectForm input[name='students'][value='"+student.id+"']").closest("td").next().find("select").val();
+				student.courseId = studentCourseId;
+			});
+			$('#addStudentsModal').modal("show");
+
+		});
+		
+		$('#addStudentsModal').on('hidden.bs.modal', function () {
+			// fix for body shifting left when closing modal
+    	$("body").addClass('modal-open');
+		})
+
+		$('#editProjectModal').on('hidden.bs.modal', function () {
+			// fix for body shifting left when closing modal
+			$("body").addClass('modal-open');
+		})
+		
+		$('#editModal').on('hidden.bs.modal', function () {
+			// fix for body shifting left when closing modal
+			$("body").addClass('modal-open');
+		})
+	
+
+		$('#btnSaveStudentChanges').on('click', function () {
+			studentChangesSaved = true;
+		});	
+
+		$('#studentsTable').on('post-body.bs.table', function (data) {
+			$('.student-selected').removeClass('student-selected');
+			
+			setTimeout( function(){
+				// check only the rows that are in selectedStudentsInAddModal
+				var tableData = $('#studentsTable').bootstrapTable('getData');
+				var rowIndex;
+				if ( ! tabledCleaned ) {
+					for (var key in tableData) {
+						var rowIsSelected;
+						rowIsSelected = selectedStudentsInEditModal.find(function(student) {
+							return student.id === tableData[key]["_data"]["id"];
+						});										
+					}
+					tabledCleaned = true;
+				}				
+				selectedStudentsInEditModal.forEach(function (student, index) {
+					$("#studentsTable tr[data-id='"+student.id+"']").addClass('student-selected');
+				});
+			}, 0);	
+		});
+
+		var seenEditStudentErrorOnce = false;
+		var seenEditProjectOnce = false;
+		$('#table').on('post-body.bs.table', function (data) {
+			{% if editFormErrorStudentId %}
+				if (! seenEditStudentErrorOnce) {
+					setTimeout( function(){
+						var studentIdErr = {{ editFormErrorStudentId }}; 
+						handleEdit(studentIdErr);
+						$('#editModal').modal("show");
+						seenEditStudentErrorOnce = true;
+					}, 0);	
+				}
+			{% elif editProjectErrorId %}
+				if (! seenEditProjectOnce) {
+					setTimeout( function(){
+						var projectId = {{ editProjectErrorId }};
+						var xmlhttp = new XMLHttpRequest();
+						var url = "/Admin/Projects/"+projectId+"/json";
+						xmlhttp.onreadystatechange = function () {
+							if (this.readyState == 4 && this.status == 200) {
+								var data = JSON.parse(this.responseText);
+								fillInEditProject(data[0]);
+							}
+						};
+						xmlhttp.open("POST", url, true);
+						xmlhttp.send();
+					
+						seenEditProjectOnce = true;
+					}, 0);	
+				}
+			{% endif %}				
+		});
+
+		
+
+	</script>
+
+{% endblock scripts %}

@@ -1,0 +1,190 @@
+{% extends "layout.html" %} 
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/layout.css') }}">
+{% endblock styles %}
+
+{% block navbar %}
+	<a class="navbar-brand px-4" href="{{ url_for('index') }}">
+		<img src="/static/images/headLogo.png" style="max-height: 30px;margin-bottom:5px;"/>	
+		ARVR Lab 
+	</a>
+	<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+		<span class="navbar-toggler-icon"></span>
+	</button>
+
+	<div class="collapse navbar-collapse" id="navbarSupportedContent">
+		<div class="navbar-container">
+			{% if student.profilePic %}
+				<img src="/static/images/profile/{{ student.profilePic }}" alt="student profile" class="avatar">
+			{% else %}
+				<img src="/static/images/profile/default.png" alt="default profile" class="avatar">
+			{% endif %}
+		</div>
+		<ul class="navbar-nav mr-auto mt-2 mt-lg-0">
+			<li class="nav-item dropdown my-2 my-lg-0">
+				<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+					{{ student.firstNameEng }} {{ student.lastNameEng }}
+				</a>
+				<div class="dropdown-menu " aria-labelledby="navbarDropdown">
+				<a class="dropdown-item" href="{{ url_for('editAccount') }}">Edit Account</a>
+				<div class="dropdown-divider"></div>
+				<a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a>
+				</div>
+			</li>	
+			<li class="nav-item">
+				<a class="nav-link" href="{{ url_for('home') }}">My Projects</a>
+			</li>
+		</ul>
+	</div>
+{% endblock navbar %}
+
+{% block content %}
+<div class="container">
+	{% if not studentInProject %}
+	<div class="col-sm-7 mx-auto">
+		{% with messages = get_flashed_messages(with_categories=true) %}
+			{% if messages %}
+				{% for category, message in messages %}
+					<div class="alert alert-{{ category }}">
+						{{ message }}
+					</div>
+				{% endfor %}
+			{% endif %}
+		{% endwith %}
+	</div>
+	{% else %}
+
+	<div style="margin-bottom:8em;margin-top:6em">
+			<div class="col-md-6 mx-auto" style="border: 0px solid green;">
+				<h1>{{ project.title }}</h1>
+				<h6 class="pb-2">Winter 2019</h6>
+			</div>
+		
+		<div class="col-md-3 pull-right" style="border: 0px solid green;">
+			<span style="font-weight: bold;">Students:</span>
+			<div class="">
+			
+				{% for studentName in project.studentsNamesEng %}
+					{% if loop.index > 1 %}
+					,
+					{% endif %}
+					{{ studentName }}
+				{% endfor %}	
+			
+			</div>	
+		</div>
+
+		<div class="col-md-3 pull-left" style="border: 0px solid green;">
+				<span style="font-weight: bold;">Supervisors:</span>
+				<div class="">
+				
+					{% for supervisorName in project.supervisorsNames %}
+						{% if loop.index > 1 %}
+						,
+						{% endif %}
+						{{ supervisorName }}
+					{% endfor %}	
+				
+				</div>	
+		</div>
+
+		<div class="pull-left mb-4" style="width:100%;border-bottom: 1px solid white;">
+					
+		</div>
+		
+	</div>
+	
+	<div class="col-sm-7 mx-auto" style="border: 0px solid red;">
+		{% with messages = get_flashed_messages(with_categories=true) %}
+			{% if messages %}
+				{% for category, message in messages %}
+					<div class="alert alert-{{ category }}">
+						{{ message }}
+					</div>
+				{% endfor %}
+			{% endif %}
+		{% endwith %}
+	</div>
+
+	{% if project.comments %}
+	<div class="my-5 mx-auto">
+		<div class="col-md-7 mx-auto"><h4 style="font-weight: bold;">הערות המנחים</h4></div>
+		<div class="col-md-7 mx-auto" style="border-left: 6px solid #e576b98f;background-color: #fcd5f6d9;padding: 20px; white-space: pre-line; direction: rtl;">{{ project.comments }}</div>
+	</div>
+	{% endif %}
+	
+	
+	<div class="form-group justify-content-md-center" >
+		<div class="col-md-3 mx-auto">
+			<h4 style="font-weight: bold;">סטטוס פרוייקט</h4>
+		</div>
+		<div class="col-md-3 mx-auto" style="text-align: right;">
+			<div class="custom-control custom-checkbox">
+				<label class="checkbox-inline mr-2">מסמך דרישות</label>
+				{% if project.requirementsDoc %}
+					<i class="fa fa-check" style="color: green;"></i>
+				{% else %}
+					<i class="fa fa-remove" style="color:red;"></i>
+				{% endif %}
+			</div>
+			
+			<div class="custom-control custom-checkbox">
+				<label class="checkbox-inline mr-2">פגישת התנעה</label>
+				{% if project.firstMeeting %}
+					<i class="fa fa-check" style="color: green;"></i>
+				{% else %}
+					<i class="fa fa-remove" style="color:red;"></i>
+				{% endif %}
+			</div>
+
+			<div class="custom-control custom-checkbox">
+				<label class="checkbox-inline mr-2">מצגת אמצע</label>
+				{% if project.halfwayPresentation %}
+					<i class="fa fa-check" style="color: green;"></i>
+				{% else %}
+					<i class="fa fa-remove" style="color:red;"></i>
+				{% endif %}
+			</div>
+
+			<div class="custom-control custom-checkbox">
+				<label class="checkbox-inline mr-2">פגישת סיום</label>
+				{% if project.finalMeeting %}
+					<i class="fa fa-check" style="color: green;"></i>
+				{% else %}
+					<i class="fa fa-remove" style="color:red;"></i>
+				{% endif %}
+			</div>
+
+			<div class="custom-control custom-checkbox">
+				<label class="checkbox-inline mr-2">דו"ח פרוייקט</label>
+				{% if project.projectReport %}
+					<i class="fa fa-check" style="color: green;"></i>
+				{% else %}
+					<i class="fa fa-remove" style="color:red;"></i>
+				{% endif %}
+			</div>
+
+			<div class="custom-control custom-checkbox">
+				<label class="checkbox-inline mr-2">החזרת ציוד</label>
+				{% if project.equipmentReturned %}
+					<i class="fa fa-check" style="color: green;"></i>
+				{% else %}
+					<i class="fa fa-remove" style="color:red;"></i>
+				{% endif %}
+			</div>
+
+			<div class="custom-control custom-checkbox">
+				<label class="checkbox-inline mr-2">דף פרוייקט</label>
+				{% if project.projectDoc %}
+					<i class="fa fa-check" style="color: green;"></i>
+				{% else %}
+					<i class="fa fa-remove" style="color:red;"></i>
+				{% endif %}
+			</div>
+		</div>
+	</div>
+
+
+	{% endif %}
+</div>
+{% endblock content %}

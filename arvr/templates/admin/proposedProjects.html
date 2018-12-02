@@ -1,0 +1,417 @@
+{% extends "layout.html" %} 
+{% block styles %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.10.0/bootstrap-table.min.css">
+{% endblock styles %}
+{% block navbar %}
+<a class="navbar-brand px-4" href="{{ url_for('home') }}">ARVR Lab Managment</a>
+<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+ aria-expanded="false" aria-label="Toggle navigation">
+	<span class="navbar-toggler-icon"></span>
+</button>
+
+<div class="collapse navbar-collapse" id="navbarSupportedContent">
+	<ul class="navbar-nav mr-auto">
+		<li class="nav-item dropdown">
+			<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true"
+			 aria-expanded="false">Admin</a>
+			<div class="dropdown-menu " aria-labelledby="navbarDropdown">
+				<a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a>
+			</div>
+		</li>
+		<li class="nav-item">
+			<a class="nav-link" href="{{ url_for('manageProjects') }}">Projects</a>
+		</li>
+		<li class="nav-item">
+			<a class="nav-link active" href="{{ url_for('manageProposedProjects') }}">Proposed Projects</a>
+		</li>
+		<li class="nav-item">
+			<a class="nav-link" href="{{ url_for('manageStudents') }}">Students</a>
+		</li>
+		<li class="nav-item">
+			<a class="nav-link" href="{{ url_for('manageSupervisors') }}">Supervisors</a>
+		</li>
+	</ul>
+</div>
+{% endblock navbar %} 
+
+{% block content %}
+<h1>Proposed Projects</h1>
+<div class="container">
+	{% if not proposedProjects %}
+		<div class="mt-4 mb-4" style="text-align: center;">
+			<button type="button" id="btnAddNew" class="btn btn-success btn-lg"  data-toggle="modal" data-target="#addNewModal"><i class="fa fa-plus-circle fa-fw" style=""></i>Add New</button>
+		</div>
+	{% endif %}
+	{% with messages = get_flashed_messages(with_categories=true) %} 
+		{% if messages %} 
+			{% for category, message in messages %}
+				{% if not addFormErrors and editFormErrorButtonId == '' %}
+					<div class="alert alert-{{ category }}">
+						{{ message }}
+					</div>
+				{% endif %}
+			{% endfor %} 
+		{% endif %} 
+	{% endwith %}
+	
+	<table id="table" class="table mt-4">
+		<thead>
+			{% if proposedProjects %}
+				<tr>
+					<th scope="col" class="pt-5">Image</th>
+					<th scope="col">Title</th>
+					<th scope="col" style="width:30%">Desctiption</th>
+					<th scope="col">Supervisors</th>
+					<th class="hiddenColumn"></th>
+					<th scope="col"></th>
+					<th scope="col" style="padding:5px 0 5px 0;">
+						<button type="button" id="btnAddNew" class="btn btn-success"  data-toggle="modal" data-target="#addNewModal"><i class="fa fa-plus-circle fa-fw"></i> Add New</button>
+					</th>
+				</tr>
+			{% endif %}
+		</thead>
+		<tbody>
+			{% for proposedProject in proposedProjects %}
+				<tr id="project{{ proposedProject.id }}">
+					<td>
+							{% if proposedProject.image %}
+								<img style="width:80px;height:70px;" src="../static/images/proposed_projects/{{ proposedProject.image }}" alt="{{ proposedProject.image }}">						
+							{% endif %}
+					</td>					
+					<td name="title">{{ proposedProject.title }}</td>
+					<td name="description" style="white-space: pre-line;">{{ proposedProject.description }}</td>
+					<td>
+						{% for supervisorName in proposedProject.supervisorsNames %}
+							{% if loop.index > 1 %}
+								,
+							{% endif %}
+							{{ supervisorName }}
+						{% endfor %}
+					</td>
+					<td class="hiddenColumn" data-name="supervisorsIds">
+						{% for supervisorId in proposedProject.supervisorsIds %}
+							{% if loop.index > 1 %}
+								,
+							{% endif %}
+							{{ supervisorId }}
+						{% endfor %}
+					</td>
+					<td>
+						<button type="button" id="edit{{ proposedProject.id }}" class="btn btn-primary" data-toggle="modal" data-target="#editModal" data-proposed-project-id="{{ proposedProject.id }}"><i class="fa fa-edit fa-fw" style=""></i> Edit</button>
+					</td>
+					<td>
+						<button type="button" name="btnDelete" id="delete{{ proposedProject.id }}" class="btn btn-danger ml-4" data-toggle="modal" data-target="#deleteModal" data-proposed-project-id="{{ proposedProject.id }}"><i class="fa fa-trash fa-fw" style=""></i> Delete</button>
+					</td>
+				</tr>
+			{% endfor %} 
+		</tbody>
+	</table>
+
+	<div class="modal fade bg" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
+			<div class="modal-dialog" role="document">
+				<div class="modal-content" style="color: #000;">
+					<div class="modal-header">
+						<h5 class="modal-title" id="editModalLabel">Edit Proposed Project</h5>
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
+					</div>
+					{% with messages = get_flashed_messages(with_categories=true) %}
+						{% if messages and editFormErrorButtonId %}
+							{% for category, message in messages %}
+								{% if category!="success" %}
+									<div class="alert alert-{{ category }}">
+										{{ message }}
+									</div>
+								{% endif %}
+							{% endfor %}
+						{% endif %}
+					{% endwith %}
+					<form class="form" id="editForm" method="POST" action="{{ url_for('manageProposedProjects') }}" enctype="multipart/form-data">
+						<input type="hidden" name="pageForm" value="editForm">
+						<div class="modal-body">
+								{{ editForm.hidden_tag() }}
+
+								<div class="form-group row">
+									{{ editForm.title.label(class="col-md-3 col-form-label") }}									
+									<div class="col-md-7">
+										{% if editForm.title.errors %} 
+										{{ editForm.title(class="form-control is-invalid") }}
+											<div class="invalid-feedback">
+												{% for error in editForm.title.errors %}
+													<span>{{ error }}</span>
+												{% endfor %}
+											</div>
+										{% else %} 
+											{{ editForm.title(class="form-control") }} 
+										{% endif %}	
+									</div>
+									<div class="col-md-1"></div>								
+								</div>
+
+								<div class="form-group row mb-2">
+									{{ editForm.description.label(class="col-md-3 col-form-label") }} 
+									<div class="col-md-7">
+										{% if editForm.description.errors %} 
+										{{ editForm.description(class="form-control is-invalid", rows="10", style="height:100%;") }}
+											<div class="invalid-feedback">
+												{% for error in editForm.description.errors %}
+													<span>{{ error }}</span>
+												{% endfor %}
+											</div>
+										{% else %} 
+											{{ editForm.description(class="form-control", rows="10", style="height:100%;") }} 
+										{% endif %}	
+									</div>	
+									<div class="col-md-1"></div>							
+								</div>
+
+								<div class="form-group row">
+									{{ editForm.image.label(class="col-md-3 col-form-label text-center") }} 
+									<div class="col-md-6">
+										{% if editForm.image.errors %} 
+										{{ editForm.image(class="custom-file-input is-invalid") }}
+											<div class="invalid-feedback">
+												{% for error in editForm.image.errors %}
+													<span>{{ error }}</span>
+												{% endfor %}
+											</div>
+										{% else %} 
+											{{ editForm.image(class="custom-file-input") }} 
+										{% endif %}
+										<label class="custom-file-label text-left" for="image">Choose file</label>	
+									</div>
+									<div class="col-md-1"></div>								
+								</div>
+
+								<div class="form-group row">
+									{{ editForm.supervisor1.label(class="col-md-3 col-form-label") }}
+									<div class="col-md-7">
+										{{ editForm.supervisor1(class="custom-select form-control") }}
+									</div>
+									<div class="col-md-1"></div>
+								</div>
+	
+								<div class="form-group row">
+									{{ editForm.supervisor2.label(class="col-md-3 col-form-label") }}
+									<div class="col-md-7">
+										{{ editForm.supervisor2(class="custom-select form-control") }}
+									</div>
+									<div class="col-md-1"></div>
+								</div>
+	
+								<div class="form-group row">
+									{{ editForm.supervisor3.label(class="col-md-3 col-form-label") }}
+									<div class="col-md-7">
+										{{ editForm.supervisor3(class="custom-select form-control") }}
+									</div>
+									<div class="col-md-1"></div>
+								</div>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+							{{ editForm.submit(class="btn btn-success") }}
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+
+
+	<div class="modal fade bg" id="addNewModal" tabindex="-1" role="dialog" aria-labelledby="addNewModalLabel" aria-hidden="true">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="addNewModalLabel">New Proposed Project</h5>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				{% with messages = get_flashed_messages(with_categories=true) %}
+					{% if messages and addFormErrors %}
+						{% for category, message in messages %}
+							{% if category!="success" %}
+								<div class="alert alert-{{ category }}">
+									{{ message }}
+								</div>
+							{% endif %}
+						{% endfor %}
+					{% endif %}
+				{% endwith %}
+				<form id="addForm" method="POST" action="{{ url_for('manageProposedProjects') }}" enctype="multipart/form-data">
+					{{ addForm.hidden_tag() }}
+					<input type="hidden" name="pageForm" value="addForm">
+					<div class="modal-body">
+							<div class="form-group row">
+								{{ addForm.newTitle.label(class="col-md-3 col-form-label") }} 
+								<div class="col-md-7">
+									{% if addForm.newTitle.errors %} 
+									{{ addForm.newTitle(class="form-control is-invalid") }}
+										<div class="invalid-feedback">
+											{% for error in addForm.newTitle.errors %}
+												<span>{{ error }}</span>
+											{% endfor %}
+										</div>
+									{% else %} 
+										{{ addForm.newTitle(class="form-control") }} 
+									{% endif %}
+								</div>
+								<div class="col-md-1"></div>
+							</div>
+							<div class="form-group row">
+								{{ addForm.newDescription.label(class="col-md-3 col-form-label") }} 
+								<div class="col-md-7 mb-2">
+									{% if addForm.newDescription.errors %} 
+									{{ addForm.newDescription(class="form-control is-invalid", rows="10", style="height:100%;") }}
+										<div class="invalid-feedback">
+											{% for error in addForm.newDescription.errors %}
+												<span>{{ error }}</span>
+											{% endfor %}
+										</div>
+									{% else %} 
+										{{ addForm.newDescription(class="form-control", rows="10", style="height:100%;") }} 
+									{% endif %}
+								</div>
+								<div class="col-md-1"></div>
+							</div>
+
+							<div class="form-group row">
+								{{ addForm.newImage.label(class="col-md-3 col-form-label text-center") }} 
+								<div class="col-md-6">
+									{% if addForm.newImage.errors %} 
+									{{ addForm.newImage(class="custom-file-input is-invalid") }}
+										<div class="invalid-feedback">
+											{% for error in addForm.newImage.errors %}
+												<span>{{ error }}</span>
+											{% endfor %}
+										</div>
+									{% else %} 
+										{{ addForm.newImage(class="custom-file-input") }} 
+									{% endif %}
+									<label class="custom-file-label text-left" for="newImage">Choose file</label>	
+								</div>
+								<div class="col-md-1"></div>								
+							</div>
+
+							<div class="form-group row">
+								{{ addForm.newSupervisor1.label(class="col-md-3 col-form-label") }}
+								<div class="col-md-7">
+									{{ addForm.newSupervisor1(class="custom-select form-control") }}
+								</div>
+								<div class="col-md-1"></div>
+							</div>
+
+							<div class="form-group row">
+								{{ addForm.newSupervisor2.label(class="col-md-3 col-form-label") }}
+								<div class="col-md-7">
+									{{ addForm.newSupervisor2(class="custom-select form-control") }}
+								</div>
+								<div class="col-md-1"></div>
+							</div>
+
+							<div class="form-group row">
+								{{ addForm.newSupervisor3.label(class="col-md-3 col-form-label") }}
+								<div class="col-md-7">
+									{{ addForm.newSupervisor3(class="custom-select form-control") }}
+								</div>
+								<div class="col-md-1"></div>
+							</div>
+							
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+						{{ addForm.submit(class="btn btn-success") }}
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="deleteModalLabel">Delete Proposed Project</h5>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
+			<div class="modal-body">
+				Are you sure?
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
+				<button type="button" onclick='document.getElementById("deleteForm").submit()' class="btn btn-primary">Yes</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<form id="deleteForm" method="POST" action="{{ url_for('manageProposedProjects') }}/Delete">
+	{{ deleteForm.hidden_tag() }}
+</form>
+{% endblock content %}
+
+{% block scripts %}
+<script src="../static/js/bootstrap-table.js"></script>
+<script src="../static/js/bootstrap-table-filter-control.js"></script>
+
+<script>
+	/* display the filename when choosing a profile picture */
+	$('#image, #newImage').on('change',function(){
+		let fileName = $(this).val().split('\\').pop(); 
+		$(this).next('.custom-file-label').addClass("selected").html(fileName);
+	})
+
+	/* ###################################################### */
+	/* Select yaron and boaz as supervisors automatically */
+	if ($("#newSupervisor1 option:contains('Yaron Honen')").length > 0) {
+		$("#newSupervisor1 option:contains('Yaron Honen')").attr("selected",true);
+	}
+	if ($("#newSupervisor2 option:contains('Boaz Sternfeld')").length > 0) {
+		$("#newSupervisor2 option:contains('Boaz Sternfeld')").attr("selected",true);
+	} 
+	/* ###################################################### */
+	
+	$('#editModal').on('show.bs.modal', function (event) {
+		var button = $(event.relatedTarget);
+		var proposedProjectId = button.data('proposed-project-id');
+		var modal = $(this);
+		
+		var row = $("#project"+proposedProjectId);
+		var title = row.find("td[name='title']").html();
+		var description = row.find("td[name='description']").html();
+		var supervisorsIds = row.find("td[data-name='supervisorsIds']").html();
+		supervisorsIds = supervisorsIds.split(',').map(s => s.trim());
+		
+		modal.find('.modal-body #proposedProjectId').val(proposedProjectId);
+		modal.find('.modal-body #title').val(title);
+		modal.find('.modal-body #description').val(description);
+		supervisorsIds.forEach(function(id, index) {
+			$("#supervisor"+(index+1)).val(supervisorsIds[index]);	
+		});
+		for(var i=supervisorsIds.length+1; i<=3; i++) {
+			$("#supervisor"+(i)).val('');
+		}
+	})
+
+	$("button[name='btnDelete']").on('click', function (event) {
+		proposedProjectId = $(this).data("proposed-project-id");
+		$("#deleteForm").find('#deleteProposedProjectId').val(proposedProjectId);
+	})
+
+	{% if addFormErrors %}
+		document.getElementById("btnAddNew").click();
+	{% else %}
+		document.getElementById("newTitle").value = "";
+		document.getElementById("newDescription").value = "";
+		document.getElementById("newImage").value = "";
+	{% endif %}
+	{% if editFormErrorButtonId %}
+		document.getElementById("{{ editFormErrorButtonId }}").click();
+	{% endif %}
+	
+</script>
+
+{% endblock scripts %}
