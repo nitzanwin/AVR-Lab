@@ -77,12 +77,12 @@ def manageSupervisors():
 		editForm.email.data = editForm.email.data.strip()
 		addForm.newEmail.data = addForm.newEmail.data.strip()
 		if formName == 'editForm':
+			supervisor = Supervisor.query.filter_by(id=editForm.id.data).first()
+			if not supervisor:
+				app.logger.error('In manageSupervisors, in editForm, tried to edit a supervisor with id {} that does not exist in the db'.format(editForm.id.data))
+				flash("Error: supervisor with id {} is not in the db.".format(editForm.id.data), 'danger')
+				return redirect(url_for('manageSupervisors'))
 			if editForm.validate_on_submit():
-				supervisor = Supervisor.query.filter_by(id=editForm.id.data).first()
-				if not supervisor:
-					app.logger.error('In manageSupervisors, in editForm, tried to edit a supervisor with id {} that does not exist in the db'.format(editForm.id.data))
-					flash("Error: supervisor with id {} is not in the db.".format(editForm.id.data), 'danger')
-					return redirect(url_for('manageSupervisors'))
 				supervisor.supervisorId = editForm.supervisorId.data
 				supervisor.firstNameEng = editForm.firstNameEng.data
 				supervisor.lastNameEng = editForm.lastNameEng.data
@@ -223,14 +223,12 @@ def manageStudents(id):
 	if(request.method == 'POST'):
 		formName = request.form['sentFormName']
 		if formName == 'editForm':
+			student = Student.query.filter_by(id=editForm.id.data).first()
+			if not student:
+				app.logger.error('In manageStudents, in editForm, tried to edit a student with id {} that does not exist in the db'.format(editForm.id.data))
+				flash("Error: student with id {} is not in the db.".format(editForm.id.data), 'danger')
+				return redirect(url_for('manageStudents'))
 			if editForm.validate_on_submit():
-				student = Student.query.filter_by(id=editForm.id.data).first()	
-
-				if not student:
-					app.logger.error('In manageStudents, in editForm, tried to edit a student with id {} that does not exist in the db'.format(editForm.id.data))
-					flash("Error: student with id {} is not in the db.".format(editForm.id.data), 'danger')
-					return redirect(url_for('manageStudents'))
-
 				student.studentId = editForm.studentId.data
 				student.firstNameEng = editForm.firstNameEng.data.capitalize()
 				student.lastNameEng = editForm.lastNameEng.data.capitalize()
@@ -577,8 +575,14 @@ def manageProposedProjects():
 					flash('There was an error, see details below.', 'danger')
 				addFormErrors = True
 		elif formName == 'editForm':
+			proposedProject = ProposedProject.query.filter_by(id=editForm.proposedProjectId.data).first()
+
+			if not proposedProject:
+				app.logger.error('In manageProposedProjects, in editForm, tried to edit a proposed project with id {} that does not exist in the db'.format(editForm.proposedProjectId.data))
+				flash("Error: project with id {} is not in the db.".format(editForm.proposedProjectId.data), 'danger')
+				return redirect(url_for('manageProposedProjects'))
+
 			if editForm.validate_on_submit():	
-				proposedProject = ProposedProject.query.filter_by(id=editForm.proposedProjectId.data).first()
 				picFile = proposedProject.image
 				if editForm.image.data:
 					# delete old image if exists
