@@ -1,5 +1,5 @@
 ```
-├── arvr - the main application module
+├── avr - the main application module
 │   ├── forms.py - conatains all the different forms the site uses
 │   ├── __init__.py - contains initialization code for the package
 │   ├── models.py - contains all the database models used by the site
