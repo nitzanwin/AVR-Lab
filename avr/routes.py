@@ -139,7 +139,9 @@ def deleteStudent():
 		# remove all projects that this student is related to
 		StudentProject.query.filter_by(studentId=deleteForm.deleteStudentId.data).delete()
 		# remove from user table
-		User.query.filter_by(userId=deleteForm.deleteStudentId.data).delete()
+		studentUser = User.query.filter_by(userId=student.studentId).first()		
+		app.logger.info('In deleteStudent, deleting user {}'.format(studentUser))
+		db.session.delete(studentUser)
 
 		# delete profile pic if exists
 		picFile = student.profilePic
@@ -407,7 +409,7 @@ def manageProjects(id):
 
 				app.logger.info('In manageProjects, in editForm, commiting project {} changes'.format(project))
 				db.session.commit()
-				 
+
 				flash('Project was updated successfully!', 'success')
 				if request.form.get('studentsReferrer'):
 					return redirect(url_for('manageStudents'))

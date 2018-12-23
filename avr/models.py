@@ -13,7 +13,7 @@ class User(db.Model, UserMixin):
 	userType = db.Column(db.String(20), nullable=False)
 
 	def __repr__(self):
-		return "ProposedProject({}, {}, {})".format(self.id, self.userId, self.userType)
+		return "User({}, {}, {})".format(self.id, self.userId, self.userType)
 
 class StudentSchema(ma.Schema):
 	class Meta:
@@ -44,6 +44,7 @@ class Student(db.Model):
 	semester = db.Column(db.String(20), nullable=False)
 	year = db.Column(db.Integer, nullable=False)
 	profilePic = db.Column(db.String(50), nullable=True)
+	isRegistered = db.Column(db.Boolean, nullable=True, default=False)
 
 	def get_reset_token(self, expires_sec=1800):
 		s = Serializer(app.config['SECRET_KEY'], expires_sec)
@@ -184,7 +185,6 @@ class Project(db.Model):
 		else:
 			return "הרשמה"
 
-		
 
 class Supervisor(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
