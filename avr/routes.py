@@ -15,6 +15,7 @@ from avr.models import (Student, User, Admin, Project, Supervisor,
 from flask_login import login_user, current_user, logout_user, login_required
 from flask_mail import Message
 from sqlalchemy_utils import database_exists
+import traceback
 
 if not database_exists(app.config['SQLALCHEMY_DATABASE_URI']):
 	db.create_all()
@@ -62,7 +63,7 @@ def deleteSupervisor():
 			flash("Error: can't delete, supervisor id is not in the db", 'danger')
 		return redirect(url_for('manageSupervisors'))
 	except Exception as e:
-		app.logger.error('In deleteSupervisor, Error is: {}'.format(e))
+		app.logger.error('In deleteSupervisor, Error is: {}\n{}'.format(e, traceback.format_exc()))
 		db.session.rollback()
 		return redirect(url_for('errorPage'))
 
@@ -125,7 +126,7 @@ def manageSupervisors():
 						flash('There was an error, see details below.', 'danger')
 		return render_template('/admin/supervisors.html', title="Manage Supervisors", editForm=editForm, deleteForm=deleteForm, addForm=addForm, editFormErrorSupervisorId=editFormErrorSupervisorId, addFormErrors=addFormErrors, supervisors=supervisors)
 	except Exception as e:
-		app.logger.error('In manageSupervisors, Error is: {}'.format(e))
+		app.logger.error('In manageSupervisors, Error is: {}\n{}'.format(e, traceback.format_exc()))
 		db.session.rollback()
 		return redirect(url_for('errorPage'))
 
@@ -139,7 +140,7 @@ def getAllStudentsInYearSemester(year, semester):
 		result = studentsSchema.dump(students)
 		return jsonify(result.data)
 	except Exception as e:
-		app.logger.error('In getAllStudentsInYearSemester with year: {}, semester: {}, Error is: {}'.format(year, semester, e))
+		app.logger.error('In getAllStudentsInYearSemester with year: {}, semester: {}, Error is: {}\n{}'.format(year, semester, e, traceback.format_exc()))
 		return "[]"
 
 @app.route('/Admin/Students/Delete', methods=['POST'])
@@ -164,7 +165,7 @@ def deleteStudent():
 				try:
 					os.remove(os.path.join(picFolder, picFile))
 				except OSError as e:
-					app.logger.error('In deleteStudent, could not delete image {}, Error is: {}'.format(os.path.join(picFolder, picFile), e))
+					app.logger.error('In deleteStudent, could not delete image {}, Error is: {}\n{}'.format(os.path.join(picFolder, picFile), e, traceback.format_exc()))
 
 			app.logger.info('In deleteStudent, deleting student {}'.format(student))
 			db.session.delete(student)
@@ -175,7 +176,7 @@ def deleteStudent():
 			flash("Error: can't delete, student id is not in the db", 'danger')
 		return redirect(url_for('manageStudents'))
 	except Exception as e:
-		app.logger.error('In deleteStudent, Error is: {}'.format(e))
+		app.logger.error('In deleteStudent, Error is: {}\n{}'.format(e, traceback.format_exc()))
 		db.session.rollback()
 		return redirect(url_for('errorPage'))
 
@@ -191,7 +192,7 @@ def getStudentLastProjects(id):
 		result = projectSchema.dump(projects)
 		return jsonify(result.data)
 	except Exception as e:
-		app.logger.error('In getStudentLastProjects with id: {}, Error is: {}'.format(id, e))
+		app.logger.error('In getStudentLastProjects with id: {}, Error is: {}\n{}'.format(id, e, traceback.format_exc()))
 		return "[]"
 
 
@@ -205,7 +206,7 @@ def getStudentData(id):
 		result = studentSchema.dump(student)
 		return jsonify(result.data)
 	except Exception as e:
-		app.logger.error('In getStudentData with id: {}, Error is: {}'.format(id, e))
+		app.logger.error('In getStudentData with id: {}, Error is: {}\n{}'.format(id, e, traceback.format_exc()))
 		return "[]"
 
 
@@ -279,7 +280,7 @@ def manageStudents(id):
 
 		return render_template('/admin/students.html', title="Manage Students", editForm=editForm, editProjectForm=edit_ProjectForm, courses=courses, defaultCourseId=defaultCourseId, deleteForm=deleteForm, editFormErrorStudentId=editFormErrorStudentId, students=students)
 	except Exception as e:
-		app.logger.error('In manageStudents, Error is: {}'.format(e))
+		app.logger.error('In manageStudents, Error is: {}\n{}'.format(e, traceback.format_exc()))
 		db.session.rollback()
 		return redirect(url_for('errorPage'))
 
@@ -294,7 +295,7 @@ def getProjectData(id):
 		result = projectSchema.dump(project)
 		return jsonify(result.data)
 	except Exception as e:
-		app.logger.error('In getProjectData with id: {}, Error is: {}'.format(id, e))
+		app.logger.error('In getProjectData with id: {}, Error is: {}\n{}'.format(id, e, traceback.format_exc()))
 		return "{}"
 
 @app.route('/Admin/Projects/Delete', methods=['POST'])
@@ -312,7 +313,7 @@ def deleteProject():
 				try:
 					os.remove(os.path.join(picFolder, picFile))
 				except OSError as e:
-					app.logger.error('In deleteProjects, could not delete image {}, Error is: {}'.format(os.path.join(picFolder, picFile), e))
+					app.logger.error('In deleteProjects, could not delete image {}, Error is: {}\n{}'.format(os.path.join(picFolder, picFile), e, traceback.format_exc()))
 			
 			# delete all students from project
 			StudentProject.query.filter_by(projectId=project.id).delete()
@@ -328,7 +329,7 @@ def deleteProject():
 			flash("Error: can't delete, project id {} is not in the db".format(deleteForm.deleteProjectId.data), 'danger')
 		return redirect(url_for('manageProjects'))
 	except Exception as e:
-		app.logger.error('In deleteProject, Error is: {}'.format(e))
+		app.logger.error('In deleteProject, Error is: {}\n{}'.format(e, traceback.format_exc()))
 		db.session.rollback()
 		return redirect(url_for('errorPage'))
 	
@@ -408,7 +409,7 @@ def manageProjects(id):
 							try:
 								os.remove(os.path.join(picFolder, picFile))
 							except OSError as e:
-								app.logger.error('In manageProjects, could not delete old project image {}, Error is: {}'.format(os.path.join(picFolder, picFile), e))
+								app.logger.error('In manageProjects, could not delete old project image {}, Error is: {}\n{}'.format(os.path.join(picFolder, picFile), e, traceback.format_exc()))
 						picFile = save_image(editForm.image.data, "projects")
 						app.logger.info('In manageProjects, in editForm, new image {} was saved successfully'.format(picFile))
 					project.image = picFile
@@ -532,7 +533,7 @@ def manageProjects(id):
 						flash('There was an error, see details below.', 'danger')
 		return render_template('/admin/projects.html', title="Manage Projects", projects=projects, students=students, courses=courses, defaultCourseId=defaultCourseId, addForm=addForm, editForm=editForm, deleteForm=deleteForm, addFormErrors=addFormErrors, editFormErrorProjectId=editFormErrorProjectId, editStudentForm=edit_studentForm)
 	except Exception as e:
-		app.logger.error('In manageProjects, Error is: {}'.format(e))
+		app.logger.error('In manageProjects, Error is: {}\n{}'.format(e, traceback.format_exc()))
 		db.session.rollback()
 		return redirect(url_for('errorPage'))
 
@@ -552,7 +553,7 @@ def deleteProposedProjects():
 				try:
 					os.remove(os.path.join(picFolder, picFile))
 				except OSError as e:
-					app.logger.error('In deleteProposedProjects, could not delete image {}, Error is: {}'.format(os.path.join(picFolder, picFile), e))
+					app.logger.error('In deleteProposedProjects, could not delete image {}, Error is: {}\n{}'.format(os.path.join(picFolder, picFile), e, traceback.format_exc()))
 			
 			# remove all supervisors from this proposed project
 			SupervisorProposedProject.query.filter_by(proposedProjectId=proposedProject.id).delete()
@@ -565,7 +566,7 @@ def deleteProposedProjects():
 			flash("Error: can't delete, proposed project id is not in the db", 'danger')
 		return redirect(url_for('manageProposedProjects'))
 	except Exception as e:
-		app.logger.error('In deleteProposedProjects, Error is: {}'.format(e))
+		app.logger.error('In deleteProposedProjects, Error is: {}\n{}'.format(e, traceback.format_exc()))
 		db.session.rollback()
 		return redirect(url_for('errorPage'))
 	
@@ -650,7 +651,7 @@ def manageProposedProjects():
 							try:
 								os.remove(os.path.join(picFolder, picFile))
 							except OSError as e:
-								app.logger.error('In manageProposedProjects, could not delete old image {}, Error is: {}'.format(os.path.join(picFolder, picFile), e))
+								app.logger.error('In manageProposedProjects, could not delete old image {}, Error is: {}\n{}'.format(os.path.join(picFolder, picFile), e, traceback.format_exc()))
 						picFile = save_image(editForm.image.data, "proposed_projects")
 						app.logger.info('In manageProposedProjects, in editForm, new image {} was saved successfully'.format(picFile))
 					
@@ -690,7 +691,7 @@ def manageProposedProjects():
 		proposedProjects = ProposedProject.query.all()		
 		return render_template('/admin/proposedProjects.html', title="Manage Proposed Projects", proposedProjects=proposedProjects, addForm=addForm, editForm=editForm, deleteForm=deleteForm, addFormErrors=addFormErrors, editFormErrorProposedProjectId=editFormErrorProposedProjectId)
 	except Exception as e:
-		app.logger.error('In manageProposedProjects, Error is: {}'.format(e))
+		app.logger.error('In manageProposedProjects, Error is: {}\n{}'.format(e, traceback.format_exc()))
 		db.session.rollback()
 		return redirect(url_for('errorPage'))
 
@@ -712,7 +713,7 @@ def projectStatus(id):
 
 		return render_template('projectStatus.html', title="Project Status", student=student, project=project, studentInProject=studentInProject)
 	except Exception as e:
-		app.logger.error('In projectStatus, Error is: {}'.format(e))
+		app.logger.error('In projectStatus, Error is: {}\n{}'.format(e, traceback.format_exc()))
 		return redirect(url_for('errorPage'))
 
 
@@ -774,7 +775,7 @@ def index():
 				admin = Admin.query.filter_by(adminId=current_user.userId).first()
 		return render_template('index.html', proposedProjects=proposedProjects, student=student, admin=admin)
 	except Exception as e:
-		app.logger.error('In index page, Error is: {}'.format(e))
+		app.logger.error('In index page, Error is: {}\n{}'.format(e, traceback.format_exc()))
 		return redirect(url_for('errorPage'))
 
 @app.route('/home', methods=['GET'])
@@ -790,7 +791,7 @@ def home():
 		projects = [Project.query.filter_by(id=p.projectId).first() for p in projectsIds]
 		return render_template('studentHome.html', title="Home", student=student, projects=projects)
 	except Exception as e:
-		app.logger.error('In home, Error is: {}'.format(e))
+		app.logger.error('In home, Error is: {}\n{}'.format(e, traceback.format_exc()))
 		return redirect(url_for('errorPage'))
 
 @app.route('/ProposedProjects', methods=['GET'])
@@ -799,7 +800,7 @@ def proposedProjects():
 		proposedProjects = ProposedProject.query.all()
 		return render_template('proposedProjects.html', title="Proposed Projects", proposedProjects=proposedProjects)
 	except Exception as e:
-		app.logger.error('In proposedProjects, Error is: {}'.format(e))
+		app.logger.error('In proposedProjects, Error is: {}\n{}'.format(e, traceback.format_exc()))
 		return redirect(url_for('errorPage'))
 
 def sendResetEmail(student):
@@ -814,7 +815,7 @@ def sendResetEmail(student):
 		return True
 	except Exception as e:
 		flash('Error: could not send mail', 'danger')
-		app.logger.error('In sendResetEmail, could not send mail to {}. Error is: {}'.format(recipients, e))
+		app.logger.error('In sendResetEmail, could not send mail to {}. Error is: {}\n{}'.format(recipients, e, traceback.format_exc()))
 		return False
 
  
@@ -838,7 +839,7 @@ def resetRequest():
 				flash('There was an error, see details below.', 'danger')
 		return render_template('resetRequest.html', title="Reset Password", form=form)
 	except Exception as e:
-		app.logger.error('In resetRequest, Error is: {}'.format(e))
+		app.logger.error('In resetRequest, Error is: {}\n{}'.format(e, traceback.format_exc()))
 		return redirect(url_for('errorPage'))
 
 
@@ -866,7 +867,7 @@ def resetToken(token):
 				flash('There was an error, see details below.', 'danger')
 		return render_template('resetToken.html', title="Reset Password", form=form)
 	except Exception as e:
-		app.logger.error('In resetToken, Error is: {}'.format(e))
+		app.logger.error('In resetToken, Error is: {}\n{}'.format(e, traceback.format_exc()))
 		db.session.rollback()
 		return redirect(url_for('errorPage'))
 
@@ -900,7 +901,7 @@ def createAdminAccount():
 				flash('There was an error, see details below.', 'danger')
 		return render_template('/admin/createAdminAccount.html', title="Create Admin Account", form=form)
 	except Exception as e:
-		app.logger.error('In createAdminAccount, Error is: {}'.format(e))
+		app.logger.error('In createAdminAccount, Error is: {}\n{}'.format(e, traceback.format_exc()))
 		db.session.rollback()
 		return redirect(url_for('errorPage'))
 
@@ -951,7 +952,7 @@ def login():
 					flash('There was an error, see details below.', 'danger')
 		return render_template('login.html', title="Login", form=form)
 	except Exception as e:
-		app.logger.error('In login, Error is: {}'.format(e))
+		app.logger.error('In login, Error is: {}\n{}'.format(e, traceback.format_exc()))
 		return redirect(url_for('errorPage'))
 
 
@@ -964,7 +965,7 @@ def getProposedProjectSupervisors(id):
 		result = supervisorSchema.dump(supervisors)
 		return jsonify(result.data)
 	except Exception as e:
-		app.logger.error('In getProposedProjectSupervisors with id: {}, Error is: {}'.format(id, e))
+		app.logger.error('In getProposedProjectSupervisors with id: {}, Error is: {}\n{}'.format(id, e, traceback.format_exc()))
 		return "{}"
 
 def copy_image(sourcePath, destinationFolder, destinationName):
@@ -972,12 +973,12 @@ def copy_image(sourcePath, destinationFolder, destinationName):
 		try:
 			os.makedirs(destinationFolder)
 		except Exception as e:
-			app.logger.error('In copy_image, could not make dir {}, Error is: {}'.format(destinationFolder, e))
+			app.logger.error('In copy_image, could not make dir {}, Error is: {}\n{}'.format(destinationFolder, e, traceback.format_exc()))
 	try:
 		copyfile(sourcePath, os.path.join(destinationFolder, destinationName))
 		app.logger.info('In copy_image, file {} was copied successfully to {}'.format(sourcePath, os.path.join(destinationFolder, destinationName)))
 	except Exception as e:
-		app.logger.error('In copy_image, could not copyfile {}, Error is: {}'.format(sourcePath, e))
+		app.logger.error('In copy_image, could not copyfile {}, Error is: {}\n{}'.format(sourcePath, e, traceback.format_exc()))
 	
 
 def save_image(form_image, folder):
@@ -990,7 +991,7 @@ def save_image(form_image, folder):
 		try:
 			os.makedirs(imageFolder)
 		except Exception as e:
-			app.logger.error('In save_image, could not make dir {}, Error is: {}'.format(imageFolder, e))
+			app.logger.error('In save_image, could not make dir {}, Error is: {}\n{}'.format(imageFolder, e, traceback.format_exc()))
 
 	imagePath = os.path.join(imageFolder, imageName)
 	# if this file name is already taken, try maximum 20 other random file names
@@ -1082,7 +1083,7 @@ def register():
 					flash('There was an error, see details below.', 'danger')
 		return render_template('register.html', title="Registration", form=form) 
 	except Exception as e:
-		app.logger.error('In register, Error is: {}'.format(e))
+		app.logger.error('In register, Error is: {}\n{}'.format(e, traceback.format_exc()))
 		db.session.rollback()
 		return redirect(url_for('errorPage'))
 
@@ -1116,7 +1117,7 @@ def editAccount():
 						try:
 							os.remove(os.path.join(picFolder, picFile))
 						except OSError as e:
-							app.logger.error('In Edit Account, could not delete old profile picture {}, Error is: {}'.format(os.path.join(picFolder, picFile), e))
+							app.logger.error('In Edit Account, could not delete old profile picture {}, Error is: {}\n{}'.format(os.path.join(picFolder, picFile), e, traceback.format_exc()))
 					picFile = save_image(form.profilePic.data, "profile")
 				hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
 				student.studentId = form.studentId.data
@@ -1161,6 +1162,6 @@ def editAccount():
 
 		return render_template('editAccount.html', title="Edit Account", form=form, student=student)
 	except Exception as e:
-		app.logger.error('In editAccount, Error is: {}'.format(e))
+		app.logger.error('In editAccount, Error is: {}\n{}'.format(e, traceback.format_exc()))
 		db.session.rollback()
 		return redirect(url_for('errorPage'))
