@@ -1,0 +1,246 @@
+@import url("font-awesome.min.css");
+@import url("https://fonts.googleapis.com/css?family=Roboto:100,300,100italic,300italic");
+
+/* Links */
+a, a:focus, a:hover {
+ /*  color: #fff; */
+}
+
+/* Base structure */
+html, body {
+  height: 100%;
+  /* font-size: 1.2vh !important;  */
+}
+
+body {
+	text-align: center;
+	background-color: rgb(242, 244, 246);
+	color: rgb(74, 86, 96);
+	font-family:'Avenir LT Std 55 Roman', 'Arial';
+}
+
+@font-face {
+	font-family: 'Avenir LT Std 55 Roman';
+	font-style: normal;
+	font-weight: normal;
+	src: local('Avenir LT Std 55 Roman'), url('AvenirLTStd-Roman.woff') format('woff');
+}
+
+.btn-primary {
+	background-color:  rgb(91, 195, 242) !important;
+	border: 0 !important;
+	border-radius: 7px;
+}
+
+.btn-primary:hover {
+	background-color:  rgb(36, 168, 230) !important;
+}
+
+.btn-success {
+	background-color:  rgb(117, 225, 131) !important;
+	border: 0 !important;
+	border-radius: 7px;
+}
+
+.btn-secondary {
+	background-color:  rgb(74, 86, 96) !important;
+	border: 0 !important;
+	border-radius: 7px;
+}
+
+h1 {
+	margin-top: 2.3em;
+	/* padding-bottom:0.5em; */
+/* 	background-color: white; */
+}
+
+h4 {
+	font-weight: 200;
+	margin: 0 0 0.8em 0;
+}
+
+.navbar-nav > li {
+
+}
+
+.nav-item a.active {
+  border-bottom: 2px solid rgb(87, 168, 208);
+
+}
+.nav-item a:hover {
+	font-weight: 700;
+}
+
+
+label {
+	margin-top: 5px;
+}
+
+input {
+	border-radius: 20px;
+}
+
+:-moz-ui-invalid {
+  box-shadow: none;
+}
+
+input::-webkit-input-placeholder {
+	color: rgb(175, 175, 175) !important;
+	font-size: 0.8em;
+}
+
+
+.required .col-form-label:before {
+	content:"* ";
+	color:red;
+}
+
+.avatar {
+	vertical-align: middle;
+	width: 5.5vh;
+	height: 5.5vh;
+	border-radius: 50%;
+}
+
+
+.nav-item{
+	margin-right: 1em;
+}
+
+.form-group{
+	justify-content: center;
+}
+.navbar {
+	background-color: rgb(42, 48, 53) !important; 
+}
+
+.navbar-nav > li > .dropdown-menu > .dropdown-item:focus {     
+	background-color: rgb(36, 168, 230);  
+}
+
+
+.nav-link {
+	color: rgba(255, 255, 255, 0.801) !important;
+}
+
+.col-form-label, .col-sm-2{
+	border: 0px solid yellow;
+	width: auto !important;
+	text-align: right;
+
+}
+
+td, th {
+	vertical-align: middle !important;
+	border-bottom: 2px solid rgb(245, 247, 248) !important;
+	border-top: 0px solid white !important;
+	border-left:  0px solid white !important;
+}
+
+div[name="studentsList"] td, div[name="studentsList"] th {
+	border-bottom: 0 !important;
+}
+
+#mainTable {	
+	background-color: rgb(255, 255, 255);
+	border-radius: 10px;
+}
+
+#mainTable th:first-child ,#mainTable tr td:first-child {
+	padding-left: 40px !important;
+}
+
+#mainTable th:last-child ,#mainTable tr td:last-child{
+	padding-right: 40px !important;
+}
+
+th {
+	vertical-align:bottom !important;
+}
+
+.fht-cell {
+	padding: 20px;
+}
+
+.fixed-table-container {
+	border: 0px solid black !important;
+}
+
+.page-list .dropdown-menu {
+	min-width: 0px !important; 
+	padding: 20px;
+	margin: 5px;
+	background: #dedfe0 !important;
+	
+}
+.dropup li a {
+	color: black !important;
+}
+.dropup li:not(:first-child) {
+	padding-top: 10px;
+	
+}
+
+.modal-header {
+	background-color: #eee;
+	
+}
+
+.card-img-top {
+	/* width:440px; */
+	max-width:100%;
+	width: auto;
+	height: 200px;
+	/* width: 100%; */
+	margin: 0 auto;
+    /* object-fit: scale-down; */
+  }
+
+.card {
+	/* color: rgb(236, 236, 236); */
+
+	border: solid 0px rgba(255, 255, 255, 0.5);
+	vertical-align: bottom !important;
+}
+
+.card-title {
+	vertical-align: bottom !important;
+}
+
+.card-text {
+	white-space: pre-line;
+}
+
+.hiddenColumn{
+	display: none;
+	visibility: hidden;
+}
+
+.form-control {
+	height: calc(2.7rem);
+}
+
+tbody tr:hover {
+	/* background-color: rgba(253, 133, 253, 0.158) !important; */
+}
+
+.custom-control.custom-checkbox{padding-left: 0;}
+
+
+label.custom-control-label {
+  position: relative;
+  padding-right: 1.5rem;
+}
+
+label.custom-control-label::before, label.custom-control-label::after{
+  right: 0;
+  left: auto;
+}
+
+.project-status-stage { 
+	border-radius: 7px;
+}
+
+#studentsTable .student-selected {
+	background-color: rgba(166, 241, 176, 0.35);
+}

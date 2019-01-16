@@ -1,0 +1,1226 @@
+{% extends "layout.html" %}
+
+
+{% block styles %} 
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.10.0/bootstrap-table.min.css">
+	<style>
+		#studentsTable {
+			background-color: rgb(255, 255, 255);
+			border-radius: 10px;
+		}
+		#studentsTable tr {
+    	cursor: pointer;
+		}
+		#studentsTable tr label {
+    	cursor: pointer;
+		}
+		#addStudentsModal .fixed-table-toolbar > div {
+			margin-top: 0;
+			padding-top: 0;
+		}
+		/* #### fix for page content shifting left when opening studentsModal #### */
+		.modal {
+   	 		overflow-y: auto;
+		}
+		.modal-open {
+			overflow: auto;
+		}
+		.modal-open[style] {
+			padding-right: 0px !important;
+		}
+		/* ########################################################################*/
+		.pagination>.active>a, .pagination>.active>span, .pagination>.active>a:hover, 
+		.pagination>.active>span:hover, .pagination>.active>a:focus, 
+		.pagination>.active>span:focus {
+			font-weight: bold;
+		}
+		
+		@media (min-width: 1200px){
+			.container {
+				max-width: 1260px;
+			}
+		}
+	</style>
+{% endblock styles %} 
+
+{% block navbar %}
+<a class="navbar-brand px-4" href="{{ url_for('home') }}">AVR Lab Managment</a>
+<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+ aria-expanded="false" aria-label="Toggle navigation">
+	<span class="navbar-toggler-icon"></span>
+</button>
+
+<div class="collapse navbar-collapse" id="navbarSupportedContent">
+	<ul class="navbar-nav mr-auto">
+		<li class="nav-item dropdown">
+			<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true"
+			 aria-expanded="false">Admin</a>
+			<div class="dropdown-menu " aria-labelledby="navbarDropdown">
+				<a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a>
+			</div>
+		</li>
+		<li class="nav-item">
+			<a class="nav-link" href="{{ url_for('labOverview') }}">Overview</a>
+		</li>
+		<li class="nav-item">
+			<a class="nav-link active" href="{{ url_for('manageProjects') }}">Projects</a>
+		</li>
+		<li class="nav-item">
+			<a class="nav-link" href="{{ url_for('manageProposedProjects') }}">Proposed Projects</a>
+		</li>
+		<li class="nav-item">
+			<a class="nav-link" href="{{ url_for('manageStudents') }}">Students</a>
+		</li>
+		<li class="nav-item">
+			<a class="nav-link" href="{{ url_for('manageSupervisors') }}">Supervisors</a>
+		</li>
+	</ul>
+</div>
+{% endblock navbar %}
+
+{% block content %}
+<h1 style>Projects</h1>
+<div class="container">
+	{% with messages = get_flashed_messages(with_categories=true) %} 
+		{% if messages %} 
+			{% for category, message in messages %}
+				{% if not addFormErrors and editFormErrorProjectId == '' %}
+					<div class="alert alert-{{ category }} mt-4">
+						{{ message }}
+					</div>
+				{% endif %}
+			{% endfor %} 
+		{% endif %} 
+	{% endwith %}
+	
+	<table id="mainTable" data-toggle="table" data-search="false" data-pagination="true" data-filter-control="true" data-show-export="false"
+	data-click-to-select="true" data-toolbar="#toolbar" data-pagination-v-align="bottom" data-strict-search="true" data-sort-order="desc" data-sort-name="year" data-url="/Admin/Projects/json" data-side-pagination="server">
+		<thead>
+			<tr>
+				<th data-field="image" data-sortable="false">Image</th>
+				<th data-field="year" data-filter-control="select" data-sortable="true">Year</th>
+				<th data-field="semester" data-filter-control="select" data-sortable="true">Semester</th>
+				<th data-field="status" data-filter-control="select" data-sortable="true">Status</th>
+				<th data-field="title" data-sortable="true">Title</th>
+				<th data-field="supervisorsNames" data-sortable="false">Supervisor(s)</th>
+			 	<th data-field="btnEdit"></th>
+				<th data-field="btnDelete"><button type="button" id="btnAddNewProject" class="btn btn-success "  data-toggle="modal" data-target="#addProjectModal"><i class="fa fa-plus-circle fa-fw" style=""></i> New</button></th>
+			</tr>
+		</thead>
+	</table>
+
+	<div class="modal fade bg" id="addProjectModal" tabindex="-1" role="dialog" aria-labelledby="addProjectModalLabel" aria-hidden="true">
+			<div class="modal-dialog" role="document">
+				<div class="modal-content" style="color: #000;">
+					<div class="modal-header">
+						<h5 class="modal-title" id="addProjectModalLabel">Add Project</h5>
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
+					</div>
+					{% with messages = get_flashed_messages(with_categories=true) %}
+						{% if messages and addFormErrors %}
+							{% for category, message in messages %}
+								{% if category!="success" %}
+									<div class="alert alert-{{ category }}">
+										{{ message }}
+									</div>
+								{% endif %}
+							{% endfor %}
+						{% endif %}
+					{% endwith %}
+					<form class="form" id="addProjectForm" method="POST" action="{{ url_for('manageProjects') }}" enctype="multipart/form-data">
+						<input type="hidden" name="sentFormName" value="addProjectForm">
+						<div class="modal-body">
+							{{ addForm.hidden_tag() }}
+							
+							<div class="form-group row">
+								{{ addForm.new_title.label(class="col-md-3 col-form-label") }} 
+								<div class="col-md-7">
+									{% if addForm.new_title.errors %} 
+										{{ addForm.new_title(class="custom-select form-control is-invalid") }}
+										<div class="invalid-feedback">
+											{% for error in addForm.new_title.errors %}
+												<span>{{ error }}</span>
+											{% endfor %}
+										</div>
+									{% else %} 
+										{{ addForm.new_title(class="custom-select form-control") }} 
+									{% endif %}
+								</div>
+							</div>
+							
+							<div class="form-group row">
+								<div class="col-md-3 col-form-label">Students</div>
+								<div name="studentsList" class="col-md-7" style="text-align: right;direction: rtl;">
+										<button type="button" name="btnAddStudents" class="btn btn-success"><i class="fa fa-plus-circle fa-fw" style=""></i> הוסף</button>
+								</div>
+							</div>
+
+
+							<div class="form-group row">
+								{{ addForm.new_year.label(class="col-md-3 col-form-label") }} 
+								<div class="col-md-7">
+									{% if addForm.new_year.errors %} 
+										{{ addForm.new_year(class="custom-select form-control is-invalid") }}
+										<div class="invalid-feedback">
+											{% for error in addForm.new_year.errors %}
+												<span>{{ error }}</span>
+											{% endfor %}
+										</div>
+									{% else %} 
+										{{ addForm.new_year(class="custom-select form-control") }} 
+									{% endif %}
+								</div>
+							</div>
+
+							<div class="form-group row">
+								{{ addForm.new_semester.label(class="col-md-3 col-form-label") }} 
+								<div class="col-md-7">
+									{% if addForm.new_semester.errors %} 
+										{{ addForm.new_semester(class="custom-select form-control is-invalid") }}
+										<div class="invalid-feedback">
+											{% for error in addForm.new_semester.errors %}
+												<span>{{ error }}</span>
+											{% endfor %}
+										</div>
+									{% else %} 
+										{{ addForm.new_semester(class="custom-select form-control") }} 
+									{% endif %}
+								</div>
+							</div>
+
+							<div class="form-group row">
+								{{ addForm.new_supervisor1.label(class="col-md-3 col-form-label") }} 
+								<div class="col-md-7">
+									{% if addForm.new_supervisor1.errors %} 
+										{{ addForm.new_supervisor1(class="custom-select form-control is-invalid") }}
+										<div class="invalid-feedback">
+											{% for error in addForm.new_supervisor1.errors %}
+												<span>{{ error }}</span>
+											{% endfor %}
+										</div>
+									{% else %} 
+										{{ addForm.new_supervisor1(class="custom-select form-control") }} 
+									{% endif %}
+								</div>
+							</div>
+							
+							<div class="form-group row">
+								{{ addForm.new_supervisor2.label(class="col-md-3 col-form-label") }} 
+								<div class="col-md-7">
+									{% if addForm.new_supervisor2.errors %} 
+										{{ addForm.new_supervisor2(class="custom-select form-control is-invalid") }}
+										<div class="invalid-feedback">
+											{% for error in addForm.new_supervisor2.errors %}
+												<span>{{ error }}</span>
+											{% endfor %}
+										</div>
+									{% else %} 
+										{{ addForm.new_supervisor2(class="custom-select form-control") }} 
+									{% endif %}
+								</div>
+							</div>
+
+							<div class="form-group row">
+								{{ addForm.new_supervisor3.label(class="col-md-3 col-form-label") }} 
+								<div class="col-md-7">
+									{% if addForm.new_supervisor3.errors %} 
+										{{ addForm.new_supervisor3(class="custom-select form-control is-invalid") }}
+										<div class="invalid-feedback">
+											{% for error in addForm.new_supervisor3.errors %}
+												<span>{{ error }}</span>
+											{% endfor %}
+										</div>
+									{% else %} 
+										{{ addForm.new_supervisor3(class="custom-select form-control") }} 
+									{% endif %}
+								</div>
+							</div>
+
+							<div class="form-group row">
+								{{ addForm.new_comments.label(class="col-md-3 col-form-label") }} 
+								<div class="col-md-7">
+									{% if addForm.new_comments.errors %} 
+										{{ addForm.new_comments(class="form-control is-invalid", rows="6", style="height:100%;direction:rtl;") }}
+										<div class="invalid-feedback">
+											{% for error in addForm.new_comments.errors %}
+												<span>{{ error }}</span>
+											{% endfor %}
+										</div>
+									{% else %} 
+										{{ addForm.new_comments(class="form-control", rows="6", style="height:100%;direction:rtl;") }} 
+									{% endif %}
+								</div>
+							</div>
+
+							<div class="form-group row">
+								{{ addForm.new_grade.label(class="col-md-3 col-form-label") }} 
+								<div class="col-md-3">
+									{% if addForm.new_grade.errors %} 
+										{{ addForm.new_grade(class="form-control is-invalid") }}
+										<div class="invalid-feedback">
+											{% for error in addForm.new_grade.errors %}
+												<span>{{ error }}</span>
+											{% endfor %}
+										</div>
+									{% else %} 
+										{{ addForm.new_grade(class="form-control") }} 
+									{% endif %}
+								</div>
+								<div class="col-md-4"></div>
+							</div>
+
+							<div class="form-group row">
+								<div class="col-md-3 col-form-label">Status</div>
+								<div class="col-md-7" style="text-align: right;direction:rtl;">
+									<div class="custom-control custom-checkbox px-2 py-1 mb-2 project-status-stage" style="background-color: rgba(117, 225, 131, 0.36);">
+										<input class="custom-control-input" id="new_firstStage" type="checkbox" checked>
+										<label class="custom-control-label checkbox-inline font-weight-bold" for="new_firstStage">1. הרשמה</label>
+									</div>
+
+									<div class="custom-control custom-checkbox px-2 py-1 project-status-stage" style="background-color: rgba(91, 195, 242, 0.25)">
+										<input class="custom-control-input" id="new_secondStage" type="checkbox">
+										<label class="custom-control-label checkbox-inline font-weight-bold" for="new_secondStage">2. התנעה</label>
+									</div>
+										<div class="custom-control custom-checkbox" style="margin-right: 2em;">
+											{{ addForm.new_requirementsDoc(class="custom-control-input") }}
+											{{ addForm.new_requirementsDoc.label(class="custom-control-label checkbox-inline") }}
+										</div>
+										<div class="custom-control custom-checkbox mb-2" style="margin-right: 2em;">
+											{{ addForm.new_firstMeeting(class="custom-control-input") }}
+											{{ addForm.new_firstMeeting.label(class="custom-control-label checkbox-inline") }}
+										</div>
+	
+									<div class="custom-control custom-checkbox px-2 py-1 project-status-stage" style="background-color: rgba(91, 195, 242, 0.25)">
+										<input class="custom-control-input" id="new_thirdStage" type="checkbox">
+										<label class="custom-control-label checkbox-inline font-weight-bold" for="new_thirdStage">3. אמצע</label>
+									</div>
+										<div class="custom-control custom-checkbox mb-2" style="margin-right: 2em;">
+											{{ addForm.new_halfwayPresentation(class="custom-control-input") }}
+											{{ addForm.new_halfwayPresentation.label(class="custom-control-label checkbox-inline") }}
+										</div>
+									
+									<div class="custom-control custom-checkbox px-2 py-1 project-status-stage" style="background-color: rgba(91, 195, 242, 0.25)">
+										<input class="custom-control-input" id="new_fourthStage" type="checkbox">
+										<label class="custom-control-label checkbox-inline font-weight-bold" for="new_fourthStage">4. סיום</label>
+									</div>
+										<div class="custom-control custom-checkbox" style="margin-right: 2em;">
+											{{ addForm.new_finalMeeting(class="custom-control-input") }}
+											{{ addForm.new_finalMeeting.label(class="custom-control-label checkbox-inline") }}
+										</div>
+										<div class="custom-control custom-checkbox" style="margin-right: 2em;">
+											{{ addForm.new_projectReport(class="custom-control-input") }}
+											{{ addForm.new_projectReport.label(class="custom-control-label checkbox-inline") }}
+										</div>
+										<div class="custom-control custom-checkbox" style="margin-right: 2em;">
+											{{ addForm.new_equipmentReturned(class="custom-control-input") }}
+											{{ addForm.new_equipmentReturned.label(class="custom-control-label checkbox-inline") }}
+										</div>
+										<div class="custom-control custom-checkbox" style="margin-right: 2em;">
+											{{ addForm.new_projectDoc(class="custom-control-input") }}
+											{{ addForm.new_projectDoc.label(class="custom-control-label checkbox-inline") }}
+										</div>
+										<div class="custom-control custom-checkbox" style="margin-right: 2em;">
+											{{ addForm.new_gradeStatus(class="custom-control-input") }}
+											{{ addForm.new_gradeStatus.label(class="custom-control-label checkbox-inline") }}
+										</div>
+								</div>
+							</div>
+					</div>
+
+						<div class="modal-footer">
+							<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+							{{ addForm.submitAddForm(class="btn btn-success") }}
+						</div>
+					</form>
+				</div>
+			</div>
+	</div>
+	
+
+	<div class="modal fade bg" id="editProjectModal" tabindex="-1" role="dialog" aria-labelledby="editProjectModalLabel" aria-hidden="true">
+			<div class="modal-dialog" role="document">
+				<div class="modal-content" style="color: #000;">
+					<div class="modal-header">
+						<h5 class="modal-title" id="editProjectModalLabel">Edit Project</h5>
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
+					</div>
+					{% with messages = get_flashed_messages(with_categories=true) %}
+						{% if messages and editFormErrorProjectId %}
+							{% for category, message in messages %}
+								{% if category!="success" %}
+									<div class="alert alert-{{ category }}">
+										{{ message }}
+									</div>
+								{% endif %}
+							{% endfor %}
+						{% endif %}
+					{% endwith %}
+					<form class="form" id="editProjectForm" method="POST" action="{{ url_for('manageProjects') }}" enctype="multipart/form-data">
+						<input type="hidden" name="sentFormName" value="editProjectForm">
+						<div class="modal-body">
+							{{ editForm.hidden_tag() }}
+
+							<div class="form-group row">
+								{{ editForm.title.label(class="col-md-3 col-form-label") }} 
+								<div class="col-md-7">
+									{% if editForm.title.errors %} 
+										{{ editForm.title(class="form-control is-invalid") }}
+										<div class="invalid-feedback">
+											{% for error in editForm.title.errors %}
+												<span>{{ error }}</span>
+											{% endfor %}
+										</div>
+									{% else %} 
+										{{ editForm.title(class="form-control") }} 
+									{% endif %}
+								</div>
+							</div>
+							
+							<div class="form-group row">
+								<div class="col-md-3 col-form-label">Students</div>
+								<div name="studentsList" class="col-md-7" style="text-align: right;direction: rtl;">
+								</div>
+							</div>
+
+							
+							<div class="form-group row">
+								{{ editForm.year.label(class="col-md-3 col-form-label") }} 
+								<div class="col-md-7">
+									{% if editForm.year.errors %} 
+										{{ editForm.year(class="custom-select form-control is-invalid") }}
+										<div class="invalid-feedback">
+											{% for error in editForm.year.errors %}
+												<span>{{ error }}</span>
+											{% endfor %}
+										</div>
+									{% else %} 
+										{{ editForm.year(class="custom-select form-control") }} 
+									{% endif %}
+								</div>
+							</div>
+
+							<div class="form-group row">
+								{{ editForm.semester.label(class="col-md-3 col-form-label") }} 
+								<div class="col-md-7">
+									{% if editForm.semester.errors %} 
+										{{ editForm.semester(class="custom-select form-control is-invalid") }}
+										<div class="invalid-feedback">
+											{% for error in editForm.semester.errors %}
+												<span>{{ error }}</span>
+											{% endfor %}
+										</div>
+									{% else %} 
+										{{ editForm.semester(class="custom-select form-control") }} 
+									{% endif %}
+								</div>
+							</div>
+
+							<div class="form-group row">
+								{{ editForm.supervisor1.label(class="col-md-3 col-form-label") }} 
+								<div class="col-md-7">
+									{% if editForm.supervisor1.errors %} 
+										{{ editForm.supervisor1(class="custom-select form-control is-invalid") }}
+										<div class="invalid-feedback">
+											{% for error in editForm.supervisor1.errors %}
+												<span>{{ error }}</span>
+											{% endfor %}
+										</div>
+									{% else %} 
+										{{ editForm.supervisor1(class="custom-select form-control") }} 
+									{% endif %}
+								</div>
+							</div>
+							
+							<div class="form-group row">
+								{{ editForm.supervisor2.label(class="col-md-3 col-form-label") }} 
+								<div class="col-md-7">
+									{% if editForm.supervisor2.errors %} 
+										{{ editForm.supervisor2(class="custom-select form-control is-invalid") }}
+										<div class="invalid-feedback">
+											{% for error in editForm.supervisor2.errors %}
+												<span>{{ error }}</span>
+											{% endfor %}
+										</div>
+									{% else %} 
+										{{ editForm.supervisor2(class="custom-select form-control") }} 
+									{% endif %}
+								</div>
+							</div>
+
+							<div class="form-group row">
+								{{ editForm.supervisor3.label(class="col-md-3 col-form-label") }} 
+								<div class="col-md-7">
+									{% if editForm.supervisor3.errors %} 
+										{{ editForm.supervisor3(class="custom-select form-control is-invalid") }}
+										<div class="invalid-feedback">
+											{% for error in editForm.supervisor3.errors %}
+												<span>{{ error }}</span>
+											{% endfor %}
+										</div>
+									{% else %} 
+										{{ editForm.supervisor3(class="custom-select form-control") }} 
+									{% endif %}
+								</div>
+							</div>
+
+							<div class="form-group row">
+								{{ editForm.comments.label(class="col-md-3 col-form-label") }} 
+								<div class="col-md-7">
+									{% if editForm.comments.errors %} 
+										{{ editForm.comments(class="form-control is-invalid", rows="6", style="height:100%;direction:rtl;") }}
+										<div class="invalid-feedback">
+											{% for error in editForm.comments.errors %}
+												<span>{{ error }}</span>
+											{% endfor %}
+										</div>
+									{% else %} 
+										{{ editForm.comments(class="form-control", rows="6", style="height:100%;direction:rtl;") }} 
+									{% endif %}
+								</div>
+							</div>
+
+							<div class="form-group row">
+								{{ editForm.image.label(class="col-md-3") }} 
+								<div class="col-md-6">
+									{% if editForm.image.errors %} 
+									{{ editForm.image(class="custom-file-input is-invalid") }}
+										<div class="invalid-feedback">
+											{% for error in editForm.image.errors %}
+												<span>{{ error }}</span>
+											{% endfor %}
+										</div>
+									{% else %} 
+										{{ editForm.image(class="custom-file-input") }} 
+									{% endif %}
+									<label class="custom-file-label text-left" for="image">Choose file</label>	
+								</div>								
+							</div>
+
+							<div class="form-group row">
+								{{ editForm.grade.label(class="col-md-3 col-form-label") }} 
+								<div class="col-md-3">
+									{% if editForm.grade.errors %} 
+										{{ editForm.grade(class="form-control is-invalid") }}
+										<div class="invalid-feedback">
+											{% for error in editForm.grade.errors %}
+												<span>{{ error }}</span>
+											{% endfor %}
+										</div>
+									{% else %} 
+										{{ editForm.grade(class="form-control") }} 
+									{% endif %}
+								</div>
+								<div class="col-md-4"></div>
+							</div>
+
+							<div class="form-group row">
+								<div class="col-md-3 col-form-label">Status</div>
+								<div class="col-md-7" style="text-align: right;direction:rtl;">
+									<div class="custom-control custom-checkbox px-2 py-1 mb-2 project-status-stage" style="background-color: rgba(117, 225, 131, 0.36);">
+										<input class="custom-control-input" id="firstStage" type="checkbox" checked>
+										<label class="custom-control-label checkbox-inline font-weight-bold" for="firstStage">1. הרשמה</label>
+									</div>
+
+									<div class="custom-control custom-checkbox px-2 py-1 project-status-stage">
+										<input class="custom-control-input" id="secondStage" type="checkbox">
+										<label class="custom-control-label checkbox-inline font-weight-bold" for="secondStage">2. התנעה</label>
+									</div>
+										<div class="custom-control custom-checkbox" style="margin-right: 2em;">
+											{{ editForm.requirementsDoc(class="custom-control-input") }}
+											{{ editForm.requirementsDoc.label(class="custom-control-label checkbox-inline") }}
+										</div>
+										<div class="custom-control custom-checkbox mb-2" style="margin-right: 2em;">
+											{{ editForm.firstMeeting(class="custom-control-input") }}
+											{{ editForm.firstMeeting.label(class="custom-control-label checkbox-inline") }}
+										</div>
+	
+									<div class="custom-control custom-checkbox px-2 py-1 project-status-stage">
+										<input class="custom-control-input" id="thirdStage" type="checkbox">
+										<label class="custom-control-label checkbox-inline font-weight-bold" for="thirdStage">3. אמצע</label>
+									</div>
+										<div class="custom-control custom-checkbox mb-2" style="margin-right: 2em;">
+											{{ editForm.halfwayPresentation(class="custom-control-input") }}
+											{{ editForm.halfwayPresentation.label(class="custom-control-label checkbox-inline") }}
+										</div>
+									
+									<div class="custom-control custom-checkbox px-2 py-1 project-status-stage">
+										<input class="custom-control-input" id="fourthStage" type="checkbox">
+										<label class="custom-control-label checkbox-inline font-weight-bold" for="fourthStage">4. סיום</label>
+									</div>
+										<div class="custom-control custom-checkbox" style="margin-right: 2em;">
+											{{ editForm.finalMeeting(class="custom-control-input") }}
+											{{ editForm.finalMeeting.label(class="custom-control-label checkbox-inline") }}
+										</div>
+										<div class="custom-control custom-checkbox" style="margin-right: 2em;">
+											{{ editForm.projectReport(class="custom-control-input") }}
+											{{ editForm.projectReport.label(class="custom-control-label checkbox-inline") }}
+										</div>
+										<div class="custom-control custom-checkbox" style="margin-right: 2em;">
+											{{ editForm.equipmentReturned(class="custom-control-input") }}
+											{{ editForm.equipmentReturned.label(class="custom-control-label checkbox-inline") }}
+										</div>
+										<div class="custom-control custom-checkbox" style="margin-right: 2em;">
+											{{ editForm.projectDoc(class="custom-control-input") }}
+											{{ editForm.projectDoc.label(class="custom-control-label checkbox-inline") }}
+										</div>
+										<div class="custom-control custom-checkbox" style="margin-right: 2em;">
+											{{ editForm.gradeStatus(class="custom-control-input") }}
+											{{ editForm.gradeStatus.label(class="custom-control-label checkbox-inline") }}
+										</div>
+								</div>
+							</div>
+						</div>
+
+						<div class="modal-footer">
+							<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+							{{ editForm.submitEditForm(class="btn btn-success") }}
+						</div>
+					</form>
+				</div>
+			</div>
+	</div>
+
+	<!-- #################	Edit Student modal	################# -->
+	<div class="modal fade bg" id="editStudentModal" tabindex="-1" role="dialog" aria-labelledby="editStudentModalLabel" aria-hidden="true">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content" style="color: #000;">
+				<div class="modal-header">
+					<h5 class="modal-title" id="editStudentModalLabel">View Student</h5>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				{% with messages = get_flashed_messages(with_categories=true) %}
+					{% if messages and editStudentErrorId %}
+						{% for category, message in messages %}
+							{% if category!="success" %}
+								<div class="alert alert-{{ category }}">
+									{{ message }}
+								</div>
+							{% endif %}
+						{% endfor %}
+					{% endif %}
+				{% endwith %}
+				<form class="form" id="editStudentForm" method="POST" action="{{ url_for('manageStudents') }}">
+					<input type="hidden" name="sentFormName" value="editForm">
+					<input type="hidden" name="projectsReferrer" value="1">
+					<div class="modal-body">
+						{{ editStudentForm.hidden_tag() }}
+						<div class="form-group row">
+								{{ editStudentForm.studentId.label(class="col-md-3 col-form-label") }}
+								<div class="col-md-7 my-auto">
+									{% if editStudentForm.studentId.errors %} 
+										{{ editStudentForm.studentId(class="form-control is-invalid") }}
+										<div class="invalid-feedback">
+											{% for error in editStudentForm.studentId.errors %}
+												<span>{{ error }}</span>
+											{% endfor %}
+										</div>
+									{% else %}
+										{{ editStudentForm.studentId(class="form-control") }} 
+									{% endif %}		
+								</div>
+						</div>
+
+						<div class="form-group row">
+								<label class="col-md-3 col-form-label">Registration Year</label>
+								<div class="col-md-7 my-auto">
+									<select id="year" class="custom-select form-control" disabled>
+										<option></option>
+									</select>
+								</div>
+						</div>
+
+						<div class="form-group row">
+							<label class="col-md-3 col-form-label">Registration Semester</label>
+							<div class="col-md-7 my-auto">
+								<select id="semester" class="custom-select form-control" disabled>
+									<option></option>
+								</select>
+							</div>
+						</div>
+
+						<div class="form-group row">
+								{{ editStudentForm.firstNameHeb.label(class="col-md-3 col-form-label") }}
+								<div class="col-md-7 my-auto">
+									{% if editStudentForm.firstNameHeb.errors %} 
+										{{ editStudentForm.firstNameHeb(class="form-control is-invalid") }}
+										<div class="invalid-feedback">
+											{% for error in editStudentForm.firstNameHeb.errors %}
+												<span>{{ error }}</span>
+											{% endfor %}
+										</div>
+									{% else %}
+										{{ editStudentForm.firstNameHeb(class="form-control") }} 
+									{% endif %}		
+								</div>
+						</div>
+
+						<div class="form-group row">
+							{{ editStudentForm.lastNameHeb.label(class="col-md-3 col-form-label") }}
+							<div class="col-md-7 my-auto">
+								{% if editStudentForm.lastNameHeb.errors %} 
+									{{ editStudentForm.lastNameHeb(class="form-control is-invalid") }}
+									<div class="invalid-feedback">
+										{% for error in editStudentForm.lastNameHeb.errors %}
+											<span>{{ error }}</span>
+										{% endfor %}
+									</div>
+								{% else %}
+									{{ editStudentForm.lastNameHeb(class="form-control") }} 
+								{% endif %}		
+							</div>
+						</div>
+
+						<div class="form-group row">
+							{{ editStudentForm.firstNameEng.label(class="col-md-3 col-form-label") }}
+							<div class="col-md-7 my-auto">
+								{% if editStudentForm.firstNameEng.errors %} 
+									{{ editStudentForm.firstNameEng(class="form-control is-invalid") }}
+									<div class="invalid-feedback">
+										{% for error in editStudentForm.firstNameEng.errors %}
+											<span>{{ error }}</span>
+										{% endfor %}
+									</div>
+								{% else %}
+									{{ editStudentForm.firstNameEng(class="form-control") }} 
+								{% endif %}		
+							</div>
+						</div>
+
+						<div class="form-group row">
+							{{ editStudentForm.lastNameEng.label(class="col-md-3 col-form-label") }}
+							<div class="col-md-7 my-auto">
+								{% if editStudentForm.lastNameEng.errors %} 
+									{{ editStudentForm.lastNameEng(class="form-control is-invalid") }}
+									<div class="invalid-feedback">
+										{% for error in editStudentForm.lastNameEng.errors %}
+											<span>{{ error }}</span>
+										{% endfor %}
+									</div>
+								{% else %}
+									{{ editStudentForm.lastNameEng(class="form-control") }} 
+								{% endif %}		
+							</div>
+						</div>
+
+						<div class="form-group row">
+							{{ editStudentForm.email.label(class="col-md-3 col-form-label") }}
+							<div class="col-md-7 my-auto">
+								{% if editStudentForm.email.errors %} 
+									{{ editStudentForm.email(class="form-control is-invalid") }}
+									<div class="invalid-feedback">
+										{% for error in editStudentForm.email.errors %}
+											<span>{{ error }}</span>
+										{% endfor %}
+									</div>
+								{% else %}
+									{{ editStudentForm.email(class="form-control") }} 
+								{% endif %}		
+							</div>
+						</div>
+
+						<div class="form-group row">
+							<label class="col-md-3 col-form-label" for="profilePic">Profile Picture</label>
+							<div class="col-md-7 my-auto">
+								<img id="profilePic" style="max-width:100%;	width: auto;height: 250px;">
+							</div>
+						</div>
+
+						<div class="form-group row">
+							<label class="col-md-3 col-form-label" for="lastProjects">Last Projects</label>
+							<div class="col-md-7 my-auto" id="lastProjects">
+							</div>
+						</div>
+				</div>
+
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+	<!-- ######################################################### -->
+	
+	<div class="modal fade" id="deleteProjectModal" tabindex="-1" role="dialog" aria-labelledby="deleteProjectModalLabel" aria-hidden="true">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="deleteProjectModalLabel">Delete Project</h5>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<div class="modal-body">
+					Are you sure?
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
+					<button type="button" onclick='document.getElementById("deleteForm").submit()' class="btn btn-primary">Yes</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- ###################  addStudentsModal #################################### -->
+	<div class="modal fade bg" id="addStudentsModal" data-backdrop="true" tabindex="-1" role="dialog" aria-labelledby="addStudentsModalLabel" aria-hidden="true">
+			<div class="modal-dialog modal-lg" role="document">
+				<div class="modal-content" style="color: #000;">
+					<div class="modal-header">
+						<h5 class="modal-title" id="addStudentsModalLabel">Add Students</h5>
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
+					</div>
+					
+					<div class="modal-body">
+						<table id="studentsTable" data-toggle="table" data-search="false" data-pagination="true" data-filter-control="true" data-show-export="false" data-click-to-select="true" data-pagination-v-align="bottom" data-sort-name="registrationYear" data-sort-order="desc" data-strict-search="false" data-url="/Admin/StudentsForProject/json" data-side-pagination="server" data-unique-id="id">
+							<thead>
+								<tr>
+									<th data-field="profilePic" data-formatter="" data-sortable="false">Profile Picture</th>
+									<th data-field="registrationYear" data-filter-control="select" data-sortable="true">Year</th>
+									<th data-field="registrationSemester" data-filter-control="select" data-sortable="true">Semester</th>
+									<th data-field="studentId" data-sortable="true">Id</th>
+									<th data-field="firstNameHeb" data-sortable="true" data-filter-control="input">First Name</th>
+									<th data-field="lastNameHeb" data-sortable="true" data-filter-control="input">Last Name</th>
+									<th data-field="id" data-class='hiddenColumn'></th>
+								</tr>
+							</thead>
+						</table>
+					</div>
+
+						<div class="modal-footer">
+							<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+							<button type="button" class="btn btn-success" id="btnSaveStudentChanges" onclick='addSelectedStudents()' data-dismiss="modal">Save</button>
+						</div>
+					</form>
+				</div>
+			</div>
+	</div>
+	<!-- #################### end of addStudentsModal  ######################### -->
+
+	<form id="deleteForm" method="POST" action="{{ url_for('manageProjects') }}/Delete">
+		{{ deleteForm.hidden_tag() }}
+	</form>
+	<img src="/static/images/powered_by.png" class="mt-5 img-responsive">
+</div>
+{% endblock content %}
+
+{% block scripts %}
+	<script src="/static/js/bootstrap-table.js"></script>
+	<script src="/static/js/bootstrap-table-filter-control.js"></script>
+
+	<script>
+		/* show file name in the input box when selecting a file */
+		$('#image').on('change',function(){
+			let fileName = $(this).val().split('\\').pop(); 
+			$(this).next('.custom-file-label').addClass("selected").html(fileName);
+		})
+
+		var projectStageUncompletedColor = "rgba(91, 195, 242, 0.25)";
+		var projectStageCompletedColor = "rgba(117, 225, 131, 0.36)";
+		var editProjectTempStudentsList;
+		var editProjectStudentsList = [];
+		var addProjectTempStudentsList;
+		var addProjectStudentsList = [];
+		var coursesList = [
+			{% for course in courses %}
+				{% if loop.index > 1 %},{% endif %}
+				{	
+					id: {{ course.id }},
+					number: {{ course.number }}
+				}
+			{% endfor %}
+		];
+		var defaultCourseId = coursesList[0] ? coursesList[0].id : '';
+		
+		function getProjectData(id) {
+			var xmlhttp = new XMLHttpRequest();
+			var url = "/Admin/Projects/"+id+"/json";
+			xmlhttp.onreadystatechange = function () {
+				if (this.readyState == 4 && this.status == 200) {
+					var data = JSON.parse(this.responseText);
+					editProject(data);		
+				}
+			};
+			xmlhttp.open("GET", url, true);
+			xmlhttp.send();
+		}
+
+		function editProject(projectData) {
+			$("#editProjectForm #projectId").val(projectData.id);
+			$("#editProjectForm #title").val(projectData.title);
+			if ($("#editProjectForm #year option[value='"+projectData.year+"']").length == 0) {
+				$("#editProjectForm #year").prepend("<option value='"+projectData.year+"' selected='selected'>"+year+"</option>");
+			}
+			$("#editProjectForm #year").val(projectData.year);	
+			$("#editProjectForm #semester").val(projectData.semester);	
+			$("#editProjectForm #comments").val(projectData.comments);
+			$("#editProjectForm #grade").val(projectData.grade);
+			
+			// clear students list and add all the students in the project
+			editProjectStudentsList = [];
+			$("#editProjectForm div[name='studentsList']").empty();	
+			var htmlContent = "";
+			if (projectData.students) {
+				htmlContent = '<table class="table table-sm text-right"><tbody>';
+				projectData.students.forEach(function(student, index) {
+					var courseOptions = '<td><select name="studentsCoursesIds" onchange="changeCourseNumInStudentsList(this)" class="custom-select form-control my-auto" style="width:auto;height:2.3em;font-size:0.7em;">';
+					coursesList.forEach(function(course) {
+						if (student.courseId == course.id) {
+							courseOptions += "<option value='"+course.id+"' selected>"+course.number+"</option>";
+						}
+						else {
+							courseOptions += "<option value='"+course.id+"'>"+course.number+"</option>";
+						}
+					});	
+					courseOptions += '</select></td>';
+					var studentRow = "<tr><td><input type='hidden' name='students' value='"+student.id+"'><button type='button' name='btnRemoveStudent' onclick='removeStudentFromList(this)' class='btn btn-danger btn-sm' style='padding: 1px 4px;'><i class='fa fa-remove'></i></button><span name='studentName'><a href='javascript:void(0)' onclick='getStudentData("+student.id+")' class='badge badge-light py-1' style='font-size:1em; white-space: normal;'>"+student.fullNameHeb+"</a></span></td>"+courseOptions+"</tr>";
+					htmlContent += studentRow;
+					editProjectStudentsList.push({
+							"id": student.id, 
+							"fullNameHeb": student.fullNameHeb,
+							"courseId": student.courseId
+					})
+				});	
+			}
+			htmlContent += '<tr><td colspan="2"><button type="button" name="btnAddStudents" class="btn btn-success mt-2"><i class="fa fa-plus-circle fa-fw"></i> הוסף</button></td></tr></tbody></table>';
+			$("#editProjectForm div[name='studentsList']").append(htmlContent); 
+			
+			// clear supervisors and set project's supervisors
+			$("#editProjectForm #supervisor1").val('')
+			$("#editProjectForm #supervisor2").val('')
+			$("#editProjectForm #supervisor3").val('')
+			
+			projectData.supervisors.forEach(function (supervisor, index) {
+				$("#editProjectForm #supervisor"+(index+1)).val(supervisor.id);
+			});
+			
+			/* ################## fill in project status checkboxes ################## */
+
+			$('#editProjectForm #requirementsDoc').prop('checked', projectData.requirementsDoc); 
+			$('#editProjectForm #firstMeeting').prop('checked', projectData.firstMeeting); 
+			$('#editProjectForm #halfwayPresentation').prop('checked', projectData.halfwayPresentation); 
+			$('#editProjectForm #finalMeeting').prop('checked', projectData.finalMeeting); 
+			$('#editProjectForm #projectReport').prop('checked', projectData.projectReport); 
+			$('#editProjectForm #equipmentReturned').prop('checked', projectData.equipmentReturned); 
+			$('#editProjectForm #projectDoc').prop('checked', projectData.projectDoc); 
+			$('#editProjectForm #gradeStatus').prop('checked', projectData.gradeStatus); 
+
+			colorProjectStages($('#editProjectForm'));
+		}
+		
+		function colorProjectStages(form) {
+			var prefix = "";
+			if (form[0].id === "addProjectForm") {
+				prefix = "new_";
+			}
+			var secondStageCompleted = form.find('#'+prefix+'requirementsDoc').is(':checked') && form.find('#'+prefix+'firstMeeting').is(':checked');
+			var thirdStageCompleted = form.find('#'+prefix+'halfwayPresentation').is(':checked');
+			var fourthStageCompleted = form.find('#'+prefix+'finalMeeting').is(':checked') && form.find('#'+prefix+'projectReport').is(':checked') && form.find('#'+prefix+'equipmentReturned').is(':checked') && form.find('#'+prefix+'projectDoc').is(':checked') && form.find('#'+prefix+'gradeStatus').is(':checked');
+			form.find('#'+prefix+'secondStage').prop('checked', secondStageCompleted);
+			form.find('#'+prefix+'secondStage').parent().css("background-color", (secondStageCompleted ? projectStageCompletedColor : projectStageUncompletedColor));
+			form.find('#'+prefix+'thirdStage').prop('checked', thirdStageCompleted);
+			form.find('#'+prefix+'thirdStage').parent().css("background-color", (thirdStageCompleted ? projectStageCompletedColor : projectStageUncompletedColor));
+			form.find('#'+prefix+'fourthStage').prop('checked', fourthStageCompleted);
+			form.find('#'+prefix+'fourthStage').parent().css("background-color", (fourthStageCompleted ? projectStageCompletedColor : projectStageUncompletedColor));
+		}
+
+		/* ###### prevent user from checking/unchecking stages checkboxes ###### */
+		$("#new_firstStage, #firstStage, #new_secondStage, #secondStage, #new_thirdStage, #thirdStage, #new_fourthStage, #fourthStage").on('click', function(e) {
+				e.stopPropagation();
+				return false;
+		});
+
+		/* ############  Color project stages automatically ############*/
+		/* ------ editProjectModal  */
+		$('#requirementsDoc, #firstMeeting, #halfwayPresentation, #finalMeeting, #projectReport, #equipmentReturned, #projectDoc, #gradeStatus').change(function () { 
+			colorProjectStages($('#editProjectForm'))
+		});
+		/* ------ addProjectModal  */
+		$('#new_requirementsDoc, #new_firstMeeting, #new_halfwayPresentation, #new_finalMeeting, #new_projectReport, #new_equipmentReturned, #new_projectDoc, #new_gradeStatus').change(function () { 
+			colorProjectStages($('#addProjectForm'))
+		});
+
+		// fill in gradeStatus checkbox automatically when user inputs a grade
+		// ------ addProjectModal
+		$('#addProjectForm #new_grade').keyup(function() {
+			$('#addProjectForm #new_gradeStatus').prop('checked', $(this).val());
+			colorProjectStages($('#addProjectForm'));
+		});
+		// ---- editProjectModal
+		$('#editProjectForm #grade').keyup(function() {
+			$('#editProjectForm #gradeStatus').prop('checked', $(this).val());
+			colorProjectStages($('#editProjectForm'));
+		});
+
+
+		/* ####### addProjectModal - Fill in proposed project supervisors ########*/
+		function getProposedProjectSupervisors(projectId) {
+			var xmlhttp = new XMLHttpRequest();
+			var url = "/Admin/ProposedProjects/"+projectId+"/json";
+			xmlhttp.onreadystatechange = function () {
+				if (this.readyState == 4 && this.status == 200) {
+					var data = JSON.parse(this.responseText);		
+					setProposedProjectSupervisors(data);
+				}
+			};
+			xmlhttp.open("POST", url, true);
+			xmlhttp.send();
+		}
+		function setProposedProjectSupervisors(proposedProjectData) {
+			// reset current value
+			$("#new_supervisor1").val("");
+			$("#new_supervisor2").val("");
+			$("#new_supervisor3").val("");
+			// fill in the proposed project supervisors
+			proposedProjectData.supervisors.forEach(function(supervisor, index){
+				$("#new_supervisor"+(index+1)).val(supervisor.id);
+			});
+		}
+
+		$('#addProjectModal #new_title').on('change', function() {
+			if ($('#addProjectModal #new_title').has('option').length > 0) {
+				getProposedProjectSupervisors(this.value); 
+			}
+		});
+
+		/* ##### fill in first selected project's supervisors automatically ####*/
+		$('#addProjectModal').on('shown.bs.modal', function () {
+			var currentNewTitleValue = $('#new_title').val();
+			$('#new_title').val(currentNewTitleValue).trigger('change');			
+		})
+		
+		
+		$(document).on("click","#addProjectModal button[name='btnAddStudents']", function(e) {
+			addProjectTempStudentsList = addProjectStudentsList.slice();
+			$('#studentsTable').bootstrapTable('refresh');
+			$('#addStudentsModal').modal("show");
+		});		
+		
+		$(document).on("click","#editProjectModal button[name='btnAddStudents']", function(e) {
+			editProjectTempStudentsList = editProjectStudentsList.slice();
+			$('#studentsTable').bootstrapTable('refresh');
+			$('#addStudentsModal').modal("show");
+		});		
+
+		
+		$('#studentsTable').on('click-row.bs.table', function (e, row, element) {				
+			if (element.hasClass("student-selected")) {
+				if ($('#addProjectModal').is(':visible')) {
+					addProjectTempStudentsList = addProjectTempStudentsList.filter(student => student.id !== row.id);
+				}
+				else if ($('#editProjectModal').is(':visible')) {
+					editProjectTempStudentsList = editProjectTempStudentsList.filter(student => student.id !== row.id);
+				}
+			}
+			else {
+				let studentToAdd = {
+					id: row.id,
+					fullNameHeb: row.firstNameHeb+" "+row.lastNameHeb,
+					courseId: defaultCourseId
+				}
+				if ($('#addProjectModal').is(':visible')) {
+					addProjectTempStudentsList.push(studentToAdd);
+				}
+				else if ($('#editProjectModal').is(':visible')) {
+					editProjectTempStudentsList.push(studentToAdd);
+				}
+			}
+			element.toggleClass("student-selected");
+		});
+
+		
+		$('#studentsTable').on('load-success.bs.table', function (data) {
+			// select students that are on the current list
+			$('#studentsTable tbody tr').each(function () {
+				let currentRowStudentId = $(this).data("uniqueid");
+				let currentRow = this;
+				
+				if ($('#addProjectModal').is(':visible')) {
+					addProjectTempStudentsList.forEach(function (student) { 
+						if (student.id == currentRowStudentId) {
+							$(currentRow).addClass('student-selected');
+						}
+					});
+				}
+				else if ($('#editProjectModal').is(':visible')) {
+					editProjectTempStudentsList.forEach(function (student) { 
+						if (student.id == currentRowStudentId) {
+							
+							$(currentRow).addClass('student-selected');
+						}
+					});
+				}
+			});		
+		});
+		
+		function changeCourseNumInStudentsList(e) {
+			let studentId = parseInt($(e).closest("tr").find("input[type='hidden']").val());
+			let chosenCourseId = parseInt($(e).val());
+
+			if ($('#addProjectModal').is(':visible')) {
+				changedStudentIndex = addProjectStudentsList.findIndex(s => s.id==studentId);
+				addProjectStudentsList[changedStudentIndex].courseId = chosenCourseId;
+			}
+			else if ($('#editProjectModal').is(':visible')) {
+				changedStudentIndex = editProjectStudentsList.findIndex(s => s.id==studentId);
+				editProjectStudentsList[changedStudentIndex].courseId = chosenCourseId;
+			}
+		}
+
+		function addSelectedStudents() {
+			var baseElement;
+			var htmlContent = '<table class="table table-sm"><tbody>';
+			var courseOptions = '<td><select name="studentsCoursesIds" onchange="changeCourseNumInStudentsList(this)" class="custom-select form-control my-auto" style="width:auto;height:2.3em;font-size:0.7em;">';
+			coursesList.forEach(function(course) {
+				if (defaultCourseId == course.id) {
+					courseOptions += "<option value='"+course.id+"' selected>"+course.number+"</option>";
+				}
+				else {
+					courseOptions += "<option value='"+course.id+"'>"+course.number+"</option>";
+				}
+			});	
+			courseOptions += '</select></td>';
+
+			if ($('#addProjectModal').is(':visible')) {
+				baseElement = $("#addProjectModal div[name='studentsList']")
+				baseElement.empty();
+				addProjectStudentsList = addProjectTempStudentsList.slice();
+				addProjectStudentsList.forEach(function (student, index) {
+					var studentRow = "<tr><td><input type='hidden' name='students' value='"+student.id+"'><button type='button' name='btnRemoveStudent' onclick='removeStudentFromList(this)' class='btn btn-danger btn-sm' style='padding: 1px 4px;'><i class='fa fa-remove'></i></button><span name='studentName'><a href='javascript:void(0)' onclick='getStudentData("+student.id+")' class='badge badge-light py-1' style='font-size:1em; white-space: normal;'>"+student.fullNameHeb+"</a></span></td>"+courseOptions+"</tr>";
+					htmlContent += studentRow;
+				});
+			}
+			else if ($('#editProjectModal').is(':visible')) {
+				baseElement = $("#editProjectModal div[name='studentsList']")				
+				baseElement.empty();
+				editProjectStudentsList = editProjectTempStudentsList.slice();
+				editProjectStudentsList.forEach(function (student, index) {
+					var studentRow = "<tr><td><input type='hidden' name='students' value='"+student.id+"'><button type='button' name='btnRemoveStudent' onclick='removeStudentFromList(this)' class='btn btn-danger btn-sm' style='padding: 1px 4px;'><i class='fa fa-remove'></i></button><span name='studentName'><a href='javascript:void(0)' onclick='getStudentData("+student.id+")' class='badge badge-light py-1' style='font-size:1em; white-space: normal;'>"+student.fullNameHeb+"</a></span></td>"+courseOptions+"</tr>";
+					htmlContent += studentRow;
+				});
+			}
+			
+			htmlContent += '<tr><td colspan="2"><button type="button" name="btnAddStudents" class="btn btn-success mt-2"><i class="fa fa-plus-circle fa-fw"></i> הוסף</button></td></tr></tbody></table>';
+			baseElement.append(htmlContent);
+
+
+			// restore chosen course numbers for students still existing after changes
+			
+			if ($('#addProjectModal').is(':visible')) {
+				addProjectStudentsList.forEach(function(student, index) {
+					if (baseElement.find("input[name='students'][value='"+student.id+"']").length > 0) {
+						baseElement.find("input[name='students'][value='"+student.id+"']").closest("td").next().find("select").val(student.courseId);
+					}
+				});
+			}
+			else if ($('#editProjectModal').is(':visible')) {
+				editProjectStudentsList.forEach(function(student, index) {
+					if (baseElement.find("input[name='students'][value='"+student.id+"']").length > 0) {
+						baseElement.find("input[name='students'][value='"+student.id+"']").closest("td").next().find("select").val(student.courseId);
+					}
+				});
+			}
+		}
+
+		function removeStudentFromList(e) {
+			var id = parseInt($(e).siblings("input[name='students']").val());
+			if ($('#addProjectModal').is(':visible')) {
+				addProjectStudentsList = addProjectStudentsList.filter(student => student.id !== id);
+			}
+			else if ($('#editProjectModal').is(':visible')) {
+				editProjectStudentsList = editProjectStudentsList.filter(student => student.id !== id);
+			}
+			$(e).closest("tr").remove();
+		}
+
+		function deleteProject(id){
+			$("#deleteForm").find('#deleteProjectId').val(id);
+		}
+
+		{% if addFormErrors %}
+			$("#btnAddNewProject").click();
+		{% endif %}
+
+		{% if editFormErrorProjectId %}
+			getProjectData({{editFormErrorProjectId}});
+			$('#editProjectModal').modal("show");
+		{% endif %}
+
+
+		/* ########### show student details when clicking on students list ##########*/
+		function getStudentData(id) {
+			var xmlhttp = new XMLHttpRequest();
+			var url = "/Admin/Students/"+id+"/json";
+			xmlhttp.onreadystatechange = function () {
+				if (this.readyState == 4 && this.status == 200) {
+					var data = JSON.parse(this.responseText);
+					showStudentDetails(data);		
+				}
+			};
+			xmlhttp.open("GET", url, true);
+			xmlhttp.send();
+		}
+
+		function showStudentDetails(studentData) {
+			$("#editStudentForm #id").val(studentData.id);
+			$("#editStudentForm #studentId").val(studentData.studentId);
+			
+			$("#editStudentForm #year option:first").val(studentData.year);	
+			$("#editStudentForm #year option:first").text(studentData.year);	
+			$("#editStudentForm #semester option:first").val(studentData.semester);	
+			$("#editStudentForm #semester option:first").text(studentData.semester);	
+
+			$("#editStudentForm #email").val(studentData.email);
+			$("#editStudentForm #firstNameEng").val(studentData.firstNameEng);
+			$("#editStudentForm #lastNameEng").val(studentData.lastNameEng);
+			$("#editStudentForm #firstNameHeb").val(studentData.firstNameHeb);
+			$("#editStudentForm #lastNameHeb").val(studentData.lastNameHeb);
+			$("#editStudentForm img#profilePic").attr("src", "/static/images/profile/"+studentData.profilePic);
+
+			$("#editStudentForm #lastProjects").empty();
+			if (studentData.lastProjects.length > 0) {
+				studentData.lastProjects.forEach(function(project, index) {
+					var projectBtn = '<div><a href="javascript:void(0);" onclick="openProjectFromStudentDetails('+project.id+')" class="badge badge-primary px-2 mt-2" style="background-color: #9d6bff;padding: 1em 0;">'+project.title+'</a></div>';
+					$("#editStudentForm #lastProjects").append(projectBtn);
+				});	
+			}
+			else {
+				$("#editStudentForm #lastProjects").append("<small>No projects</small>");
+			}
+
+			var editProjectModalZIndex = parseInt($("#editProjectModal").css("z-index"));
+			$("#editStudentModal").css("z-index", editProjectModalZIndex+1);
+			$('#editStudentModal').modal("show");
+		}
+
+		function openProjectFromStudentDetails(id) {
+			var editStudentZIndex = parseInt($("#editStudentModal").css("z-index"));
+			$("#editProjectModal").css("z-index", editStudentZIndex+1);
+			$("#addStudentsModal").css("z-index", editStudentZIndex+2);
+	
+			getProjectData(id);
+			$('#editProjectModal').modal("show");
+		}
+
+		/* ######### fix for body shifting left when closing modal ######### */
+		$('#editStudentModal, #addStudentsModal, #editProjectModal').on('hidden.bs.modal', function () {
+	    	$("body").addClass('modal-open');
+		})
+
+		/* #############################################3 */
+		/* #############################################3 */
+		/* #############################################3 */
+		/* #############################################3 */
+		/* #############################################3 */
+		/* #############################################3 */
+
+	</script>
+
+{% endblock scripts %}

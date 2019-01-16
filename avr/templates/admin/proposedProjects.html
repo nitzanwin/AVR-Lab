@@ -1,0 +1,389 @@
+{% extends "layout.html" %} 
+{% block styles %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.10.0/bootstrap-table.min.css">
+<style>
+	.pagination>.active>a, .pagination>.active>span, .pagination>.active>a:hover, 
+	.pagination>.active>span:hover, .pagination>.active>a:focus, 
+	.pagination>.active>span:focus {
+		font-weight: bold;
+	}
+</style>
+{% endblock styles %}
+{% block navbar %}
+<a class="navbar-brand px-4" href="{{ url_for('home') }}">AVR Lab Managment</a>
+<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+ aria-expanded="false" aria-label="Toggle navigation">
+	<span class="navbar-toggler-icon"></span>
+</button>
+
+<div class="collapse navbar-collapse" id="navbarSupportedContent">
+	<ul class="navbar-nav mr-auto">
+		<li class="nav-item dropdown">
+			<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true"
+			 aria-expanded="false">Admin</a>
+			<div class="dropdown-menu " aria-labelledby="navbarDropdown">
+				<a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a>
+			</div>
+		</li>
+		<li class="nav-item">
+			<a class="nav-link" href="{{ url_for('labOverview') }}">Overview</a>
+		</li>
+		<li class="nav-item">
+			<a class="nav-link" href="{{ url_for('manageProjects') }}">Projects</a>
+		</li>
+		<li class="nav-item">
+			<a class="nav-link active" href="{{ url_for('manageProposedProjects') }}">Proposed Projects</a>
+		</li>
+		<li class="nav-item">
+			<a class="nav-link" href="{{ url_for('manageStudents') }}">Students</a>
+		</li>
+		<li class="nav-item">
+			<a class="nav-link" href="{{ url_for('manageSupervisors') }}">Supervisors</a>
+		</li>
+	</ul>
+</div>
+{% endblock navbar %} 
+
+{% block content %}
+<h1>Proposed Projects</h1>
+<div class="container">
+	{% with messages = get_flashed_messages(with_categories=true) %} 
+		{% if messages %} 
+			{% for category, message in messages %}
+				{% if not addFormErrors and editFormErrorProposedProjectId == '' %}
+					<div class="alert alert-{{ category }}">
+						{{ message }}
+					</div>
+				{% endif %}
+			{% endfor %} 
+		{% endif %} 
+	{% endwith %}
+
+	
+	<table id="mainTable" data-toggle="table" data-search="false" data-pagination="true" data-filter-control="true" data-show-export="false" data-click-to-select="true" data-toolbar="#toolbar" data-pagination-v-align="bottom" data-strict-search="false" data-sort-order="asc" data-sort-name="title" data-url="/Admin/ProposedProjects/json" data-side-pagination="server">
+			<thead>
+				<tr>
+					<th data-field="image" data-sortable="false">Image</th>
+					<th data-field="title" data-sortable="true" data-filter-control="input">Title</th>
+					<th data-field="description" data-sortable="false">Description</th>
+					<th data-field="supervisorsNames" data-width="15%">Supervisors</th>
+					<th data-field="btnEdit"></th>
+					<th data-field="btnDelete">
+						<button type="button" id="btnAddNewProposedProject" class="btn btn-success"  data-toggle="modal" data-target="#addNewProposedProjectModal"><i class="fa fa-plus-circle fa-fw"></i> New</button>
+					</th>
+				</tr>
+			</thead>
+		</table>
+
+
+	<div class="modal fade bg" id="editProposedProjectModal" tabindex="-1" role="dialog" aria-labelledby="editProposedProjectModalLabel" aria-hidden="true">
+			<div class="modal-dialog" role="document">
+				<div class="modal-content" style="color: #000;">
+					<div class="modal-header">
+						<h5 class="modal-title" id="editProposedProjectModalLabel">Edit Proposed Project</h5>
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
+					</div>
+					{% with messages = get_flashed_messages(with_categories=true) %}
+						{% if messages and editFormErrorProposedProjectId %}
+							{% for category, message in messages %}
+								{% if category!="success" %}
+									<div class="alert alert-{{ category }}">
+										{{ message }}
+									</div>
+								{% endif %}
+							{% endfor %}
+						{% endif %}
+					{% endwith %}
+					<form class="form" id="editProposedProjectForm" method="POST" action="{{ url_for('manageProposedProjects') }}" enctype="multipart/form-data">
+						<input type="hidden" name="pageForm" value="editProposedProjectForm">
+						<div class="modal-body">
+								{{ editForm.hidden_tag() }}
+
+								<div class="form-group row">
+									{{ editForm.title.label(class="col-md-3 col-form-label") }}									
+									<div class="col-md-7">
+										{% if editForm.title.errors %} 
+										{{ editForm.title(class="form-control is-invalid") }}
+											<div class="invalid-feedback">
+												{% for error in editForm.title.errors %}
+													<span>{{ error }}</span>
+												{% endfor %}
+											</div>
+										{% else %} 
+											{{ editForm.title(class="form-control") }} 
+										{% endif %}	
+									</div>
+									<div class="col-md-1"></div>								
+								</div>
+
+								<div class="form-group row mb-4">
+									{{ editForm.description.label(class="col-md-3 col-form-label") }} 
+									<div class="col-md-7">
+										{% if editForm.description.errors %} 
+										{{ editForm.description(class="form-control is-invalid", rows="10", style="height:100%;") }}
+											<div class="invalid-feedback">
+												{% for error in editForm.description.errors %}
+													<span>{{ error }}</span>
+												{% endfor %}
+											</div>
+										{% else %} 
+											{{ editForm.description(class="form-control", rows="10", style="height:100%;") }} 
+										{% endif %}	
+									</div>	
+									<div class="col-md-1"></div>							
+								</div>
+
+								<div class="form-group row">
+									{{ editForm.image.label(class="col-md-3 col-form-label text-center") }} 
+									<div class="col-md-6">
+										{% if editForm.image.errors %} 
+										{{ editForm.image(class="custom-file-input is-invalid") }}
+											<div class="invalid-feedback">
+												{% for error in editForm.image.errors %}
+													<span>{{ error }}</span>
+												{% endfor %}
+											</div>
+										{% else %} 
+											{{ editForm.image(class="custom-file-input") }} 
+										{% endif %}
+										<label class="custom-file-label text-left" for="image">Choose file</label>	
+									</div>
+									<div class="col-md-1"></div>								
+								</div>
+
+								<div class="form-group row">
+									{{ editForm.supervisor1.label(class="col-md-3 col-form-label") }}
+									<div class="col-md-7">
+										{{ editForm.supervisor1(class="custom-select form-control") }}
+									</div>
+									<div class="col-md-1"></div>
+								</div>
+	
+								<div class="form-group row">
+									{{ editForm.supervisor2.label(class="col-md-3 col-form-label") }}
+									<div class="col-md-7">
+										{{ editForm.supervisor2(class="custom-select form-control") }}
+									</div>
+									<div class="col-md-1"></div>
+								</div>
+	
+								<div class="form-group row">
+									{{ editForm.supervisor3.label(class="col-md-3 col-form-label") }}
+									<div class="col-md-7">
+										{{ editForm.supervisor3(class="custom-select form-control") }}
+									</div>
+									<div class="col-md-1"></div>
+								</div>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+							{{ editForm.submitEditForm(class="btn btn-success") }}
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+
+
+	<div class="modal fade bg" id="addNewProposedProjectModal" tabindex="-1" role="dialog" aria-labelledby="addNewProposedProjectModalLabel" aria-hidden="true">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="addNewProposedProjectModalLabel">New Proposed Project</h5>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				{% with messages = get_flashed_messages(with_categories=true) %}
+					{% if messages and addFormErrors %}
+						{% for category, message in messages %}
+							{% if category!="success" %}
+								<div class="alert alert-{{ category }}">
+									{{ message }}
+								</div>
+							{% endif %}
+						{% endfor %}
+					{% endif %}
+				{% endwith %}
+				<form id="addProposedProjectForm" method="POST" action="{{ url_for('manageProposedProjects') }}" enctype="multipart/form-data">
+					{{ addForm.hidden_tag() }}
+					<input type="hidden" name="pageForm" value="addProposedProjectForm">
+					<div class="modal-body">
+							<div class="form-group row">
+								{{ addForm.newTitle.label(class="col-md-3 col-form-label") }} 
+								<div class="col-md-7">
+									{% if addForm.newTitle.errors %} 
+									{{ addForm.newTitle(class="form-control is-invalid") }}
+										<div class="invalid-feedback">
+											{% for error in addForm.newTitle.errors %}
+												<span>{{ error }}</span>
+											{% endfor %}
+										</div>
+									{% else %} 
+										{{ addForm.newTitle(class="form-control") }} 
+									{% endif %}
+								</div>
+								<div class="col-md-1"></div>
+							</div>
+							<div class="form-group row">
+								{{ addForm.newDescription.label(class="col-md-3 col-form-label") }} 
+								<div class="col-md-7 mb-2">
+									{% if addForm.newDescription.errors %} 
+									{{ addForm.newDescription(class="form-control is-invalid", rows="10", style="height:100%;") }}
+										<div class="invalid-feedback">
+											{% for error in addForm.newDescription.errors %}
+												<span>{{ error }}</span>
+											{% endfor %}
+										</div>
+									{% else %} 
+										{{ addForm.newDescription(class="form-control", rows="10", style="height:100%;") }} 
+									{% endif %}
+								</div>
+								<div class="col-md-1"></div>
+							</div>
+
+							<div class="form-group row">
+								{{ addForm.newImage.label(class="col-md-3 col-form-label text-center") }} 
+								<div class="col-md-6">
+									{% if addForm.newImage.errors %} 
+									{{ addForm.newImage(class="custom-file-input is-invalid") }}
+										<div class="invalid-feedback">
+											{% for error in addForm.newImage.errors %}
+												<span>{{ error }}</span>
+											{% endfor %}
+										</div>
+									{% else %} 
+										{{ addForm.newImage(class="custom-file-input") }} 
+									{% endif %}
+									<label class="custom-file-label text-left" for="newImage">Choose file</label>	
+								</div>
+								<div class="col-md-1"></div>								
+							</div>
+
+							<div class="form-group row">
+								{{ addForm.newSupervisor1.label(class="col-md-3 col-form-label") }}
+								<div class="col-md-7">
+									{{ addForm.newSupervisor1(class="custom-select form-control") }}
+								</div>
+								<div class="col-md-1"></div>
+							</div>
+
+							<div class="form-group row">
+								{{ addForm.newSupervisor2.label(class="col-md-3 col-form-label") }}
+								<div class="col-md-7">
+									{{ addForm.newSupervisor2(class="custom-select form-control") }}
+								</div>
+								<div class="col-md-1"></div>
+							</div>
+
+							<div class="form-group row">
+								{{ addForm.newSupervisor3.label(class="col-md-3 col-form-label") }}
+								<div class="col-md-7">
+									{{ addForm.newSupervisor3(class="custom-select form-control") }}
+								</div>
+								<div class="col-md-1"></div>
+							</div>
+							
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+						{{ addForm.submitAddForm(class="btn btn-success") }}
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+	<img src="/static/images/powered_by.png" class="mt-5 img-responsive">
+</div>
+
+<div class="modal fade" id="deleteProposedProjectModal" tabindex="-1" role="dialog" aria-labelledby="deleteProposedProjectModalLabel" aria-hidden="true">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="deleteProposedProjectModalLabel">Delete Proposed Project</h5>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
+			<div class="modal-body">
+				Are you sure?
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
+				<button type="button" onclick='document.getElementById("deleteForm").submit()' class="btn btn-primary">Yes</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<form id="deleteForm" method="POST" action="{{ url_for('manageProposedProjects') }}/Delete">
+	{{ deleteForm.hidden_tag() }}
+</form>
+{% endblock content %}
+
+{% block scripts %}
+<script src="../static/js/bootstrap-table.js"></script>
+<script src="../static/js/bootstrap-table-filter-control.js"></script>
+
+<script>
+	/* display the filename when choosing a profile picture */
+	$('#image, #newImage').on('change',function(){
+		let fileName = $(this).val().split('\\').pop(); 
+		$(this).next('.custom-file-label').addClass("selected").html(fileName);
+	})
+
+
+	function getProposedProjectData(id) {
+		var xmlhttp = new XMLHttpRequest();
+		var url = "/Admin/ProposedProjects/"+id+"/json";
+		xmlhttp.onreadystatechange = function () {
+			if (this.readyState == 4 && this.status == 200) {
+				var data = JSON.parse(this.responseText);
+				editProposedProject(data);		
+			}
+		};
+		xmlhttp.open("GET", url, true);
+		xmlhttp.send();
+	}
+
+	function editProposedProject(proposedProjectData) {	
+		$("#editProposedProjectForm #proposedProjectId").val(proposedProjectData.id);
+		$("#editProposedProjectForm #title").val(proposedProjectData.title);
+		$("#editProposedProjectForm #description").val(proposedProjectData.description);
+
+		// clear supervisors and set proposed project's supervisors
+		$("#editProposedProjectForm #supervisor1").val('')
+		$("#editProposedProjectForm #supervisor2").val('')
+		$("#editProposedProjectForm #supervisor3").val('')
+		proposedProjectData.supervisors.forEach(function (supervisor, index) {
+			$("#editProposedProjectForm #supervisor"+(index+1)).val(supervisor.id);
+		});
+	}
+
+	function deleteProposedProject(id){
+		$("#deleteForm").find('#deleteProposedProjectId').val(id);
+	}
+	
+	{% if addFormErrors %}
+		$('#addNewProposedProjectModal').modal("show");
+	{% endif %}
+
+	{% if editFormErrorProposedProjectId %}
+		getProposedProjectData({{editFormErrorProposedProjectId}});
+		$('#editProposedProjectModal').modal("show");
+	{% endif %}
+
+	
+	/* select yaron and boaz as supervisors automatically in the add new modal */
+	if ($("#newSupervisor1 option:contains('Yaron Honen')").length > 0) {
+		$("#newSupervisor1 option:contains('Yaron Honen')").attr("selected",true);
+	}
+	if ($("#newSupervisor2 option:contains('Boaz Sternfeld')").length > 0) {
+		$("#newSupervisor2 option:contains('Boaz Sternfeld')").attr("selected",true);
+	}
+	
+</script>
+
+{% endblock scripts %}

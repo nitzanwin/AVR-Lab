@@ -1,0 +1,157 @@
+{% extends "layout.html" %}
+
+
+{% block styles %} 
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.10.0/bootstrap-table.min.css">
+	<style>
+		h3 {
+			font-weight: bold;
+		}
+		@media (max-width: 767px) {
+			.col-sm-5 {
+				margin-top:20px;
+			}
+		}
+	</style>
+{% endblock styles %} 
+
+{% block navbar %}
+<a class="navbar-brand px-4" href="{{ url_for('admin') }}">AVR Lab Managment</a>
+<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+ aria-expanded="false" aria-label="Toggle navigation">
+	<span class="navbar-toggler-icon"></span>
+</button>
+
+<div class="collapse navbar-collapse" id="navbarSupportedContent">
+	<ul class="navbar-nav mr-auto">
+		<li class="nav-item dropdown">
+			<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true"
+			 aria-expanded="false">Admin</a>
+			<div class="dropdown-menu " aria-labelledby="navbarDropdown">
+				<a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a>
+			</div>
+		</li>
+		<li class="nav-item">
+			<a class="nav-link active" href="{{ url_for('labOverview') }}">Overview</a>
+		</li>
+		<li class="nav-item">
+			<a class="nav-link" href="{{ url_for('manageProjects') }}">Projects</a>
+		</li>
+		<li class="nav-item">
+			<a class="nav-link" href="{{ url_for('manageProposedProjects') }}">Proposed Projects</a>
+		</li>
+		<li class="nav-item">
+			<a class="nav-link" href="{{ url_for('manageStudents') }}">Students</a>
+		</li>
+		<li class="nav-item">
+			<a class="nav-link" href="{{ url_for('manageSupervisors') }}">Supervisors</a>
+		</li>
+	</ul>
+</div>
+{% endblock navbar %}
+
+{% block content %}
+<div class="container">
+	<h1>Lab Overview</h1>
+	<div class="row justify-content-center mt-5">
+		<div class="col-sm-5">
+			<div class="card">
+				<div class="card-body">
+					<div class="container">
+						<div class="row">
+							<div class="col-sm-4">
+								<i class="fas fa-laptop-code" style="font-size: 3em; color:#6adcff"></i>
+								<div>Projects</div>
+							</div>
+							<div class="col-sm-8" style="border: 0px solid red">
+								<div class="row">
+									<div class="col">
+										<h3>{{ overview.projects.total }}</h3><span>Total</span>
+									</div>
+									<div class="col">
+										<h3>{{ overview.projects.thisSemester.finished }}/{{ overview.projects.thisSemester.total }}</h3><span>Completed This Semester</span>
+									</div>
+								</div>	
+							</div>
+						</div>
+					</div>	
+				</div>
+			</div>
+		</div>
+		<div class="col-sm-5">
+			<div class="card">
+				<div class="card-body">
+					<div class="container">
+						<div class="row">
+							<div class="col-sm-4">
+								<i class="fas fa-users" style="font-size: 3em;color:#e35d5d"></i>
+								<div>Students</div>
+							</div>
+							<div class="col-sm-8" style="border: 0px solid red">
+								<div class="row">
+									<div class="col">
+										<h3>{{ overview.students.total }}</h3><span>Total</span>
+									</div>
+									<div class="col">
+										<h3>{{ overview.students.thisSemester }}</h3><span>Registered This Semester</span>
+									</div>
+								</div>	
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="row mt-4 row justify-content-center">
+		<div class="col-sm-5">
+			<div class="card">
+				<div class="card-body">
+					<div class="container">
+						<div class="row">
+							<div class="col-sm-4">
+								<i class="fas fa-vr-cardboard" style="font-size: 3em;color:#8af1b4"></i>
+								<div>Proposed Projects</div>
+							</div>
+							<div class="col-sm-8">
+								<div class="row">
+									<div class="col-sm">
+										<h3>{{ overview.proposedProjects.total }}</h3><span>Total</span>	
+									</div>
+									<div class="col"></div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="col-sm-5">
+			<div class="card">
+				<div class="card-body">
+					<div class="container">
+						<div class="row">
+							<div class="col-sm-4">
+								<i class="fas fa-user-graduate" style="font-size: 3em; color:#6c9aed"></i>
+								<div>Supervisors</div>
+							</div>
+							<div class="col-sm-8">
+								<div class="row">
+									<div class="col-sm">
+										<h3>{{ overview.supervisors.total }}</h3><span>Total</span>	
+									</div>
+									<div class="col"></div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock content %}
+
+{% block scripts %}
+	
+{% endblock scripts %}

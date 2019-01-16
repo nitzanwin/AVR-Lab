@@ -1,0 +1,444 @@
+{% extends "layout.html" %}
+
+
+{% block styles %} 
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.10.0/bootstrap-table.min.css">
+	<style>
+		.pagination>.active>a, .pagination>.active>span, .pagination>.active>a:hover, 
+		.pagination>.active>span:hover, .pagination>.active>a:focus, 
+		.pagination>.active>span:focus {
+			font-weight: bold;
+		}
+	</style>
+{% endblock styles %} 
+
+{% block navbar %}
+<a class="navbar-brand px-4" href="{{ url_for('admin') }}">AVR Lab Managment</a>
+<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+ aria-expanded="false" aria-label="Toggle navigation">
+	<span class="navbar-toggler-icon"></span>
+</button>
+
+<div class="collapse navbar-collapse" id="navbarSupportedContent">
+	<ul class="navbar-nav mr-auto">
+		<li class="nav-item dropdown">
+			<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true"
+			 aria-expanded="false">Admin</a>
+			<div class="dropdown-menu " aria-labelledby="navbarDropdown">
+				<a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a>
+			</div>
+		</li>
+		<li class="nav-item">
+			<a class="nav-link" href="{{ url_for('labOverview') }}">Overview</a>
+		</li>
+		<li class="nav-item">
+			<a class="nav-link" href="{{ url_for('manageProjects') }}">Projects</a>
+		</li>
+		<li class="nav-item">
+			<a class="nav-link" href="{{ url_for('manageProposedProjects') }}">Proposed Projects</a>
+		</li>
+		<li class="nav-item">
+			<a class="nav-link" href="{{ url_for('manageStudents') }}">Students</a>
+		</li>
+		<li class="nav-item">
+			<a class="nav-link active" href="{{ url_for('manageSupervisors') }}">Supervisors</a>
+		</li>
+	</ul>
+</div>
+{% endblock navbar %}
+
+{% block content %}
+<div class="container">
+	<h1>Supervisors</h1>
+	{% with messages = get_flashed_messages(with_categories=true) %} 
+		{% if messages %} 
+			{% for category, message in messages %}
+				{% if not addFormErrors and editFormErrorSupervisorId == '' %}
+					<div class="alert alert-{{ category }} mt-4">
+						{{ message }}
+					</div>
+				{% endif %}
+			{% endfor %} 
+		{% endif %} 
+	{% endwith %}
+	
+	<table id="mainTable" data-toggle="table" data-search="false" data-pagination="true" data-filter-control="true" data-show-export="false" data-click-to-select="true" data-toolbar="#toolbar" data-pagination-v-align="bottom" data-strict-search="true" data-sort-order="asc" data-sort-name="status" data-url="/Admin/Supervisors/json" data-side-pagination="server">
+		<thead>
+			<tr>
+				<th data-field="status" data-filter-control="select" data-sortable="true">Status</th>
+				<th data-field="supervisorId" data-sortable="true">ID</th>
+				<th data-field="firstNameHeb" data-sortable="true">First Name</th>
+				<th data-field="lastNameHeb" data-sortable="true">Last Name</th>
+				<th data-field="email">Email</th>
+				<th data-field="btnEdit"></th>
+				<th data-field="btnDelete">
+					<button type="button" id="btnAddNewSupervisor" class="btn btn-success"  data-toggle="modal" data-target="#addSupervisorModal"><i class="fa fa-plus-circle fa-fw"></i> New</button>
+				</th>
+			</tr>
+		</thead>
+	</table>
+	
+
+	<div class="modal fade bg" id="addSupervisorModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content" style="color: #000;">
+				<div class="modal-header">
+					<h5 class="modal-title" id="addSupervisorModalLabel">Add Supervisor</h5>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				{% with messages = get_flashed_messages(with_categories=true) %}
+					{% if messages and addFormErrors %}
+						{% for category, message in messages %}
+							{% if category!="success" %}
+								<div class="alert alert-{{ category }}">
+									{{ message }}
+								</div>
+							{% endif %}
+						{% endfor %}
+					{% endif %}
+				{% endwith %}
+				<form class="form" id="addSupervisorForm" method="POST" action="{{ url_for('manageSupervisors') }}">
+					<input type="hidden" name="sentFormName" value="addSupervisorForm">
+					<div class="modal-body">
+						{{ addForm.hidden_tag() }}
+						<div class="form-group row">
+								{{ addForm.newSupervisorId.label(class="col-md-3 col-form-label") }}
+								<div class="col-md-7 my-auto">
+									{% if addForm.newSupervisorId.errors %} 
+										{{ addForm.newSupervisorId(class="form-control is-invalid") }}
+										<div class="invalid-feedback">
+											{% for error in addForm.newSupervisorId.errors %}
+												<span>{{ error }}</span>
+											{% endfor %}
+										</div>
+									{% else %}
+										{{ addForm.newSupervisorId(class="form-control") }} 
+									{% endif %}		
+								</div>
+						</div>
+
+						<div class="form-group row">
+							{{ addForm.newFirstNameHeb.label(class="col-md-3 col-form-label") }}
+							<div class="col-md-7 my-auto">
+								{% if addForm.newFirstNameHeb.errors %} 
+									{{ addForm.newFirstNameHeb(class="form-control is-invalid") }}
+									<div class="invalid-feedback">
+										{% for error in addForm.newFirstNameHeb.errors %}
+											<span>{{ error }}</span>
+										{% endfor %}
+									</div>
+								{% else %}
+									{{ addForm.newFirstNameHeb(class="form-control") }} 
+								{% endif %}		
+							</div>
+						</div>
+
+						<div class="form-group row">
+							{{ addForm.newLastNameHeb.label(class="col-md-3 col-form-label") }}
+							<div class="col-md-7 my-auto">
+								{% if addForm.newLastNameHeb.errors %} 
+									{{ addForm.newLastNameHeb(class="form-control is-invalid") }}
+									<div class="invalid-feedback">
+										{% for error in addForm.newLastNameHeb.errors %}
+											<span>{{ error }}</span>
+										{% endfor %}
+									</div>
+								{% else %}
+									{{ addForm.newLastNameHeb(class="form-control") }} 
+								{% endif %}		
+							</div>
+						</div>
+
+						<div class="form-group row">
+							{{ addForm.newFirstNameEng.label(class="col-md-3 col-form-label") }}
+							<div class="col-md-7 my-auto">
+								{% if addForm.newFirstNameEng.errors %} 
+									{{ addForm.newFirstNameEng(class="form-control is-invalid") }}
+									<div class="invalid-feedback">
+										{% for error in addForm.newFirstNameEng.errors %}
+											<span>{{ error }}</span>
+										{% endfor %}
+									</div>
+								{% else %}
+									{{ addForm.newFirstNameEng(class="form-control") }} 
+								{% endif %}		
+							</div>
+						</div>
+
+						<div class="form-group row">
+							{{ addForm.newLastNameEng.label(class="col-md-3 col-form-label") }}
+							<div class="col-md-7 my-auto">
+								{% if addForm.newLastNameEng.errors %} 
+									{{ addForm.newLastNameEng(class="form-control is-invalid") }}
+									<div class="invalid-feedback">
+										{% for error in addForm.newLastNameEng.errors %}
+											<span>{{ error }}</span>
+										{% endfor %}
+									</div>
+								{% else %}
+									{{ addForm.newLastNameEng(class="form-control") }} 
+								{% endif %}		
+							</div>
+						</div>
+
+						<div class="form-group row">
+							{{ addForm.newEmail.label(class="col-md-3 col-form-label") }}
+							<div class="col-md-7 my-auto">
+								{% if addForm.newEmail.errors %} 
+									{{ addForm.newEmail(class="form-control is-invalid") }}
+									<div class="invalid-feedback">
+										{% for error in addForm.newEmail.errors %}
+											<span>{{ error }}</span>
+										{% endfor %}
+									</div>
+								{% else %}
+									{{ addForm.newEmail(class="form-control") }} 
+								{% endif %}		
+							</div>
+						</div>
+
+						<div class="form-group row">
+							{{ addForm.newPhone.label(class="col-md-3 col-form-label") }}
+							<div class="col-md-7 my-auto">
+								{{ addForm.newPhone(class="form-control") }}
+							</div>
+						</div>
+
+						<div class="form-group row">
+							{{ addForm.newStatus.label(class="col-md-3 col-form-label") }}
+							<div class="col-md-7 my-auto">
+								{{ addForm.newStatus(class="custom-select form-control") }}
+							</div>
+						</div>
+					</div>
+
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+						{{ addForm.submitAddForm(class="btn btn-success") }}
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+	<div class="modal fade bg" id="editSupervisorModal" tabindex="-1" role="dialog" aria-labelledby="editSupervisorModalLabel" aria-hidden="true">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content" style="color: #000;">
+				<div class="modal-header">
+					<h5 class="modal-title" id="editSupervisorModalLabel">Edit Supervisor</h5>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				{% with messages = get_flashed_messages(with_categories=true) %}
+					{% if messages and editFormErrorSupervisorId %}
+						{% for category, message in messages %}
+							{% if category!="success" %}
+								<div class="alert alert-{{ category }}">
+									{{ message }}
+								</div>
+							{% endif %}
+						{% endfor %}
+					{% endif %}
+				{% endwith %}
+				<form class="form" id="editSupervisorForm" method="POST" action="{{ url_for('manageSupervisors') }}">
+					<input type="hidden" name="sentFormName" value="editSupervisorForm">
+					<div class="modal-body">
+						{{ editForm.hidden_tag() }}
+						<div class="form-group row">
+							{{ editForm.supervisorId.label(class="col-md-3 col-form-label") }}
+							<div class="col-md-7 my-auto">
+								{% if editForm.supervisorId.errors %} 
+									{{ editForm.supervisorId(class="form-control is-invalid") }}
+									<div class="invalid-feedback">
+										{% for error in editForm.supervisorId.errors %}
+											<span>{{ error }}</span>
+										{% endfor %}
+									</div>
+								{% else %}
+									{{ editForm.supervisorId(class="form-control") }} 
+								{% endif %}		
+							</div>
+						</div>
+
+						<div class="form-group row">
+							{{ editForm.firstNameHeb.label(class="col-md-3 col-form-label") }}
+							<div class="col-md-7 my-auto">
+								{% if editForm.firstNameHeb.errors %} 
+									{{ editForm.firstNameHeb(class="form-control is-invalid") }}
+									<div class="invalid-feedback">
+										{% for error in editForm.firstNameHeb.errors %}
+											<span>{{ error }}</span>
+										{% endfor %}
+									</div>
+								{% else %}
+									{{ editForm.firstNameHeb(class="form-control") }} 
+								{% endif %}		
+							</div>
+						</div>
+	
+
+						<div class="form-group row">
+							{{ editForm.lastNameHeb.label(class="col-md-3 col-form-label") }}
+							<div class="col-md-7 my-auto">
+								{% if editForm.lastNameHeb.errors %} 
+									{{ editForm.lastNameHeb(class="form-control is-invalid") }}
+									<div class="invalid-feedback">
+										{% for error in editForm.lastNameHeb.errors %}
+											<span>{{ error }}</span>
+										{% endfor %}
+									</div>
+								{% else %}
+									{{ editForm.lastNameHeb(class="form-control") }} 
+								{% endif %}		
+							</div>
+						</div>
+
+						<div class="form-group row">
+							{{ editForm.firstNameEng.label(class="col-md-3 col-form-label") }}
+							<div class="col-md-7 my-auto">
+								{% if editForm.firstNameEng.errors %} 
+									{{ editForm.firstNameEng(class="form-control is-invalid") }}
+									<div class="invalid-feedback">
+										{% for error in editForm.firstNameEng.errors %}
+											<span>{{ error }}</span>
+										{% endfor %}
+									</div>
+								{% else %}
+									{{ editForm.firstNameEng(class="form-control") }} 
+								{% endif %}		
+							</div>
+						</div>
+
+						<div class="form-group row">
+							{{ editForm.lastNameEng.label(class="col-md-3 col-form-label") }}
+							<div class="col-md-7 my-auto">
+								{% if editForm.lastNameEng.errors %} 
+									{{ editForm.lastNameEng(class="form-control is-invalid") }}
+									<div class="invalid-feedback">
+										{% for error in editForm.lastNameEng.errors %}
+											<span>{{ error }}</span>
+										{% endfor %}
+									</div>
+								{% else %}
+									{{ editForm.lastNameEng(class="form-control") }} 
+								{% endif %}		
+							</div>
+						</div>
+
+						<div class="form-group row">
+							{{ editForm.email.label(class="col-md-3 col-form-label") }}
+							<div class="col-md-7 my-auto">
+								{% if editForm.email.errors %} 
+									{{ editForm.email(class="form-control is-invalid") }}
+									<div class="invalid-feedback">
+										{% for error in editForm.email.errors %}
+											<span>{{ error }}</span>
+										{% endfor %}
+									</div>
+								{% else %}
+									{{ editForm.email(class="form-control") }} 
+								{% endif %}		
+							</div>
+						</div>
+
+						<div class="form-group row">
+							{{ editForm.phone.label(class="col-md-3 col-form-label") }}
+							<div class="col-md-7 my-auto">
+								{{ editForm.phone(class="form-control") }}
+							</div>
+						</div>
+
+						<div class="form-group row">
+							{{ editForm.status.label(class="col-md-3 col-form-label") }}
+							<div class="col-md-7 my-auto">
+								{{ editForm.status(class="custom-select form-control") }}
+							</div>
+						</div>
+					</div>
+
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+						{{ editForm.submitEditForm(class="btn btn-success") }}
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+	<div class="modal fade" id="deleteSupervisorModal" tabindex="-1" role="dialog" aria-labelledby="deleteSupervisorModalLabel" aria-hidden="true">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="deleteSupervisorModalLabel">Delete Supervisor</h5>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<div class="modal-body">
+					Are you sure?
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
+					<button type="button" onclick='document.getElementById("deleteForm").submit()' class="btn btn-primary">Yes</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<form id="deleteForm" method="POST" action="{{ url_for('manageSupervisors') }}/Delete">
+		{{ deleteForm.hidden_tag() }}
+	</form>
+	<img src="/static/images/powered_by.png" class="mt-5 img-responsive">
+</div>
+<!-- script to display the filename when choosing a profile picture -->
+{% endblock content %}
+
+{% block scripts %}
+	<script src="../static/js/bootstrap-table.js"></script>
+	<script src="../static/js/bootstrap-table-filter-control.js"></script>
+
+	<script>
+		function getSupervisorData(id) {
+			var xmlhttp = new XMLHttpRequest();
+			var url = "/Admin/Supervisors/"+id+"/json";
+			xmlhttp.onreadystatechange = function () {
+				if (this.readyState == 4 && this.status == 200) {
+					var data = JSON.parse(this.responseText);
+					editSupervisor(data);		
+				}
+			};
+			xmlhttp.open("GET", url, true);
+			xmlhttp.send();
+		}
+
+		function editSupervisor(supervisorData) {			
+			$("#editSupervisorForm").find("#id").val(supervisorData.id);
+			$("#editSupervisorForm").find("#supervisorId").val(supervisorData.supervisorId);
+			$("#editSupervisorForm").find("#email").val(supervisorData.email);
+			$("#editSupervisorForm").find("#firstNameEng").val(supervisorData.firstNameEng);
+			$("#editSupervisorForm").find("#lastNameEng").val(supervisorData.lastNameEng);
+			$("#editSupervisorForm").find("#firstNameHeb").val(supervisorData.firstNameHeb);
+			$("#editSupervisorForm").find("#lastNameHeb").val(supervisorData.lastNameHeb);
+			$("#editSupervisorForm").find("#phone").val(supervisorData.phone);
+			$("#editSupervisorForm").find("#status").val(supervisorData.status);
+		}
+
+		function deleteSupervisor(id){
+			$("#deleteForm").find('#deleteSupervisorId').val(id);
+		}
+		
+		{% if addFormErrors %}
+			$('#addSupervisorModal').modal("show");
+		{% endif %}
+
+		{% if editFormErrorSupervisorId %}
+			getSupervisorData({{editFormErrorSupervisorId}});
+			$('#editSupervisorModal').modal("show");
+		{% endif %}
+		
+	</script>
+
+{% endblock scripts %}
