@@ -19,8 +19,8 @@
 5. Install required packages:
     - Create a virtual environment named venv: ```python3 -m venv venv```
     - Active it:   
-        In *Linux*: ```source venv/bin/activate```  
-        In *Windows*: ```venv\Scripts\activate```
+        In **Linux**: ```source venv/bin/activate```  
+        In **Windows**: ```venv\Scripts\activate```
     - Install Wheel: ```pip install wheel```
     - Install all the packages the project uses: ```pip install -r requirements.txt```
 6. Run the application using flask's built-in development server: ```python3 run.py```  
@@ -36,8 +36,7 @@
         db.session.commit()
     
 
-9. In ```arvr/routes.py``` change the default course number where ```defaultCourse``` is defined (at the beginning of the file)
-10. Navigate to the supervisors page in the admin page and add some supervisors
-11. Navigate to the proposed projects page in the admin page and add some proposed projects
+9. Navigate to the supervisors page in the admin page and add some supervisors
+10. Navigate to the proposed projects page in the admin page and add some proposed projects
 
 ### Enjoy :wink:
