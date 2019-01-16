@@ -44,6 +44,7 @@ app.config['RECAPTCHA_PUBLIC_KEY'] = '6LfW_XoUAAAAAEVZdK6w22Zu5CxxEfY93RcV0x5M'
 app.config['RECAPTCHA_PRIVATE_KEY'] = '6LfW_XoUAAAAAANOX27nZ2aXVe9AgGurPGYjRUOY'
 app.config['RECAPTCHA_DATA_ATTRS'] = {'theme': 'light'}
 app.config['JSON_AS_ASCII'] = False
+app.config['MAX_CONTENT_LENGTH'] = 32 * 1024 * 1024  # 32MB max file upload limit.
 
 
 # this import should be at the bottom to avoid circular import

@@ -4,6 +4,7 @@ from shutil import copyfile
 import datetime
 from avr import app
 import traceback
+from PIL import Image
 
 def delete_image(imageName, folder):
 	if imageName is not None:
@@ -11,7 +12,7 @@ def delete_image(imageName, folder):
 		try:
 			os.remove(os.path.join(imageFolder, imageName))
 		except OSError as e:
-			app.logger.error('could not delete image {}, Error is: {}'.format(os.path.join(imageFolder, imageName), e))
+			app.logger.error('could not delete image {}, Error is: {}\n{}'.format(os.path.join(imageFolder, imageName), e, traceback.format_exc()))
 
 
 def delete_proposed_project_image(imageName):
@@ -37,7 +38,6 @@ def copy_project_image_from_proposed_project(matchingImageName):
 			app.logger.error('could not make dir {}, Error is: {}\n{}'.format(destinationFolder, e, traceback.format_exc()))
 	try:
 		copyfile(sourcePath, os.path.join(destinationFolder, newImageName))
-		app.logger.info('file {} was copied successfully to {}'.format(sourcePath, os.path.join(destinationFolder, newImageName)))
 		return newImageName
 	except Exception as e:
 		app.logger.error('could not copyfile {}, Error is: {}\n{}'.format(sourcePath, e, traceback.format_exc()))
@@ -46,6 +46,7 @@ def copy_project_image_from_proposed_project(matchingImageName):
 def save_form_image(form_image, folder):
 	random_hex = secrets.token_hex(8)
 	_, imageExt = os.path.splitext(form_image.filename)
+	imageExt = imageExt.lower()
 	imageName = random_hex + imageExt
 	imageFolder = os.path.join(app.root_path, 'static', 'images', folder)
 	
@@ -53,7 +54,7 @@ def save_form_image(form_image, folder):
 		try:
 			os.makedirs(imageFolder)
 		except Exception as e:
-			app.logger.error('could not make dir {}, Error is: {}'.format(imageFolder, e))
+			app.logger.error('could not make dir {}, Error is: {}\n{}'.format(imageFolder, e, traceback.format_exc()))
 
 	imagePath = os.path.join(imageFolder, imageName)
 	# if this file name is already taken, try maximum 20 other random file names
@@ -62,9 +63,17 @@ def save_form_image(form_image, folder):
 			break
 		imageName = secrets.token_hex(8) + imageExt
 		imagePath = os.path.join(imageFolder, imageName)
-
-	app.logger.info('saving {}'.format(imagePath))
 	form_image.save(imagePath)
+	if imageExt == ".tga":
+		# convert tga image to png
+		im = Image.open(imagePath)
+		rgb_im = im.convert('RGB')
+		oldImageName = imageName
+		imageName = imageName.replace("tga", "png")
+		newImgPath = os.path.join(imageFolder, imageName)
+		rgb_im.save(newImgPath)
+		# delete old tga image
+		delete_image(oldImageName, imageFolder)
 
 	return imageName
 

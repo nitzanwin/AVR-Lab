@@ -5,6 +5,8 @@ from wtforms.validators import DataRequired, Optional, Email, ValidationError, E
 from avr.models import Admin, User, Student, ProposedProject, Project, Supervisor
 from avr import database
 
+ALLOWED_FILE_EXT = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'tga']
+
 class RegistrationForm(FlaskForm):
 	firstNameHeb = StringField('First Name (Heb)', validators=[DataRequired()])
 	lastNameHeb = StringField('Last Name (Heb)', validators=[DataRequired()])
@@ -21,7 +23,7 @@ class RegistrationForm(FlaskForm):
 	semester = SelectField('Semester')
 	year = SelectField('Year')
 	projectTitle = SelectField('Project Title')
-	profilePic = FileField('Profile Picture', validators=[FileAllowed(['jpg', 'jpeg', 'png'])])
+	profilePic = FileField('Profile Picture', validators=[FileAllowed(ALLOWED_FILE_EXT)])
 	recaptcha = RecaptchaField(validators=[Recaptcha(message="Click the checkbox above to verify you are a human!")])
 	submit = SubmitField('Register')
 
@@ -90,7 +92,7 @@ class EditAccountForm(FlaskForm):
 	faculty = SelectField('Faculty', choices=[('Computer Science', 'Computer Science'), ('Electrical Engineering', 'Electrical Engineering'), ('Mechanical Engineering', 'Mechanical Engineering'), ('Medical Engineering', 'Medical Engineering'), ('Other', 'Other')], default="Computer Science")
 	cellPhone = StringField('Cell Phone')
 	email = StringField('Email', validators=[DataRequired(), Email()])
-	profilePic = FileField('Profile Picture', validators=[FileAllowed(['jpg', 'jpeg', 'png'])])
+	profilePic = FileField('Profile Picture', validators=[FileAllowed(ALLOWED_FILE_EXT)])
 	submit = SubmitField('Apply')
 
 	def validate_studentId(self, studentId):
@@ -121,7 +123,7 @@ class EditAccountForm(FlaskForm):
 class addProposedProjectForm(FlaskForm):
 	newTitle = StringField('Title', validators=[DataRequired()])
 	newDescription = TextAreaField('Description', validators=[DataRequired()])
-	newImage = FileField('Image', validators=[FileAllowed(['jpg', 'jpeg', 'png', 'gif'])])
+	newImage = FileField('Image', validators=[FileAllowed(ALLOWED_FILE_EXT)])
 	newSupervisor1 = SelectField('Supervisor 1')
 	newSupervisor2 = SelectField('Supervisor 2')
 	newSupervisor3 = SelectField('Supervisor 3')
@@ -136,7 +138,7 @@ class editProposedProjectForm(FlaskForm):
 	proposedProjectId = HiddenField("")
 	title = StringField('Title', validators=[DataRequired()])
 	description = TextAreaField('Description', validators=[DataRequired()])
-	image = FileField('Image', validators=[FileAllowed(['jpg', 'jpeg', 'png', 'gif'])])
+	image = FileField('Image', validators=[FileAllowed(ALLOWED_FILE_EXT)])
 	supervisor1 = SelectField('Supervisor 1')
 	supervisor2 = SelectField('Supervisor 2')
 	supervisor3 = SelectField('Supervisor 3')
@@ -182,7 +184,7 @@ class editProjectForm(FlaskForm):
 	supervisor2 = SelectField('Supervisor 2')
 	supervisor3 = SelectField('Supervisor 3')
 	comments = TextAreaField('Comments')
-	image = FileField('Project Image', validators=[FileAllowed(['jpg', 'jpeg', 'png', 'gif'])])
+	image = FileField('Project Image', validators=[FileAllowed(ALLOWED_FILE_EXT)])
 	grade = StringField('Grade')
 	requirementsDoc = BooleanField('מסמך דרישות')
 	firstMeeting = BooleanField('פגישת התנעה')
