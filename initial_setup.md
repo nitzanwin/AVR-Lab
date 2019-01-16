@@ -36,8 +36,7 @@
         db.session.commit()
     
 
-9. In ```arvr/routes.py``` change the default course number where ```defaultCourse``` is defined (at the beginning of the file)
-10. Navigate to the supervisors page in the admin page and add some supervisors
-11. Navigate to the proposed projects page in the admin page and add some proposed projects
+9. Navigate to the supervisors page in the admin page and add some supervisors
+10. Navigate to the proposed projects page in the admin page and add some proposed projects
 
 ### Enjoy :wink:
