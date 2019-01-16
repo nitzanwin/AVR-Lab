@@ -19,8 +19,8 @@
 5. Install required packages:
     - Create a virtual environment named venv: ```python3 -m venv venv```
     - Active it:   
-        In *Linux*: ```source venv/bin/activate```  
-        In *Windows*: ```venv\Scripts\activate```
+        In **Linux**: ```source venv/bin/activate```  
+        In **Windows**: ```venv\Scripts\activate```
     - Install Wheel: ```pip install wheel```
     - Install all the packages the project uses: ```pip install -r requirements.txt```
 6. Run the application using flask's built-in development server: ```python3 run.py```  
