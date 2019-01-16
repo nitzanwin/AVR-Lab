@@ -25,7 +25,7 @@ logHandler.setLevel(logging.INFO)
 app.logger.setLevel(logging.INFO)
 app.logger.addHandler(logHandler) 
 
-app.config['SECRET_KEY'] = '6efcac58452ff2e5025a11c9873cc6fd'
+app.config['SECRET_KEY'] = os.environ.get('FLASK_SECRET_KEY')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
@@ -41,7 +41,7 @@ app.config['MAIL_PASSWORD'] = os.environ.get('EMAIL_PASS')
 #app.config['MAIL_PASSWORD'] = ""
 mail = Mail(app)
 app.config['RECAPTCHA_PUBLIC_KEY'] = ''
-app.config['RECAPTCHA_PRIVATE_KEY'] = ''
+app.config['RECAPTCHA_PRIVATE_KEY'] = os.environ.get('RECAPTCHA_PRIVATE_KEY')
 app.config['RECAPTCHA_DATA_ATTRS'] = {'theme': 'light'}
 app.config['JSON_AS_ASCII'] = False
 app.config['MAX_CONTENT_LENGTH'] = 32 * 1024 * 1024  # 32MB max file upload limit.
