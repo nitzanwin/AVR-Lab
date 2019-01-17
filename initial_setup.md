@@ -17,7 +17,7 @@
     - **RECAPTCHA_PRIVATE_KEY**
 4. Verify that a default profile picture named ```default.png``` exists in ```avr/static/images/profile/```
 5. Install required packages:
-    - Create a virtual environment named venv: ```python3 -m venv venv```
+    - In the main folder (where run.py exists) create a virtual environment named venv: ```python3 -m venv venv```
     - Active it:   
         In **Linux**: ```source venv/bin/activate```  
         In **Windows**: ```venv\Scripts\activate```
