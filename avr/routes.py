@@ -552,7 +552,7 @@ def manageProjects():
 				if editForm.validate_on_submit():
 					studentsIds = request.form.getlist("students")
 					studentsCoursesIds = request.form.getlist("studentsCoursesIds")
-					if not studentsCoursesIds:
+					if studentsIds and not studentsCoursesIds:
 						flash("Error: students can't be added to a project without a course number.", 'danger')		
 						return redirect(url_for('manageProjects'))
 
@@ -626,7 +626,7 @@ def manageProjects():
 				if addForm.validate_on_submit():				
 					studentsIds = request.form.getlist("students")
 					studentsCoursesIds = request.form.getlist("studentsCoursesIds")
-					if not studentsCoursesIds:
+					if studentsIds and not studentsCoursesIds:
 						flash("Error: students can't be added to a project without a course number.", 'danger')		
 						return redirect(url_for('manageProjects'))
 					
