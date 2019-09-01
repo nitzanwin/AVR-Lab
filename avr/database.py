@@ -63,7 +63,7 @@ def deleteProject(id):
 	db.session.delete(project)
 	db.session.commit()
 
-def getProjectsTableData(sort, order, limit, offset, filters):
+def getProjectsTableData(sort, order, limit, offset, filters, lab):
 	filters_query = ""
 	if filters:
 		filters = json.loads(filters)
@@ -73,7 +73,8 @@ def getProjectsTableData(sort, order, limit, offset, filters):
 			filters_query += f" AND semester='{filters['semester']}'"
 		if "status" in filters:
 			filters_query += f" AND status='{filters['status']}'"
-	
+	if lab:
+		filters_query += f" AND lab='{lab}'"
 	sort_query = ""
 	if sort:
 		if sort == "year":
@@ -128,7 +129,8 @@ def getProjectsTableFilters():
 		"title": projectTitleFilters,
 		"status": projectStatusFilters,
 		"year": yearFilters,
-		"semester": semesterFilters
+		"semester": semesterFilters,
+		"lab": getLabFilter()
 	}
 	return filterOptions
 
@@ -147,7 +149,7 @@ def getStudentByEmail(email):
 	return models.Student.query.filter_by(email=email).first()
 
 def getCourseIdForStudentInProject(projectId, studentId):
-	studentProject =  models.StudentProject.query.filter_by(projectId=projectId, studentId=studentId).first()
+	studentProject = models.StudentProject.query.filter_by(projectId=projectId, studentId=studentId).first()
 	return studentProject.courseId
 
 def updateStudent(id, newData):
@@ -330,6 +332,102 @@ def getStudentsTableForProjectFilters():
 def getAllCourses():
 	return models.Course.query.all()
 
+def getCourseById(id):
+	return models.Course.query.filter_by(id=id).first()
+
+def updateCourse(id, newData):
+	course = getCourseById(id)
+	for field, data in newData.items():
+		course.__setattr__(field, data)
+	db.session.commit()
+
+def addCourse(newData):
+	course = models.Course()
+	for field, data in newData.items():
+		course.__setattr__(field, data)
+	db.session.add(course)
+	db.session.commit()
+	return course.id
+
+def getCoursesTableData(sort, order, limit, offset, filters):
+	query = models.Course.query.filter()
+	if filters:
+		filters = json.loads(filters)
+		if "name" in filters:
+			query = query.filter(models.Course.name.contains(filters["name"]))
+		if "number" in filters:
+			query = query.filter(models.Course.number.contains(filters["number"]))
+
+	if sort:
+		if sort == "name":
+			query = query.order_by(models.Course.name.desc() if order == "desc" else models.Course.name.asc())
+		elif sort == "number":
+			query = query.order_by(models.Course.number.desc() if order == "desc" else models.Course.number.asc())
+
+	totalResults = query.count()
+	query_results = query.paginate(int(int(offset)/int(limit))+1, int(limit), False).items
+	return totalResults, query_results
+
+def	deleteCourse(id):
+	course = getCourseById(id)
+	db.session.delete(course)
+	db.session.commit()
+
+############################ Labs ############################
+
+def getAllLabs():
+	return models.Lab.query.all()
+
+def getLabById(id):
+	return models.Lab.query.filter_by(id=id).first()
+
+def getLabByAcronym(acr):
+	return models.Lab.query.filter_by(acronym=acr).first()
+
+def updateLab(id, newData):
+	lab = getLabById(id)
+	if "acronym" in newData:
+		user = models.User.query.filter_by(userId=lab.acronym).first()
+		if not user:
+			user = models.User(userId=newData["acronym"], userType="lab")
+			db.session.add(user)
+		else:
+			user.userId = newData["acronym"]
+	for field, data in newData.items():
+		lab.__setattr__(field, data)
+	db.session.commit()
+
+def addLab(newData):
+	lab = models.Lab()
+	for field, data in newData.items():
+		lab.__setattr__(field, data)
+	user = models.User(userId=newData['acronym'], userType="lab")
+	db.session.add(user)
+	db.session.add(lab)
+	db.session.commit()
+	return lab.id
+
+def getLabsTableData(limit, offset):
+	query = models.Lab.query.filter()
+	totalResults = query.count()
+	query_results = query.paginate(int(int(offset)/int(limit))+1, int(limit), False).items
+	return totalResults, query_results
+
+def	deleteLab(id):
+	lab = getLabById(id)
+	db.session.delete(lab)
+	db.session.commit()
+
+def getLabFilter():
+	labs = [{"value": "", "text": "ALL"}]
+	for r in db.session.query(models.Lab.acronym).order_by(models.Lab.acronym.desc()).distinct():
+		labs.append({
+			"value": r.acronym,
+			"text": r.acronym
+		})
+
+	return labs
+
 ############################ Supervisors ############################
 
 def getSupervisorById(id):
@@ -393,8 +491,16 @@ def getSupervisorsTableData(sort, order, limit, offset, filters):
 
 ############################ Proposed Projects ############################
 
-def getAllProposedProjects():
-	return models.ProposedProject.query.all()
+def getAllProposedProjects(filters=None):
+	query = models.ProposedProject.query.filter()
+	if filters:
+		if filters["lab"]:
+			query = query.filter_by(lab=filters["lab"])
+		if filters["search"]:
+			query = query.filter(models.ProposedProject.description.contains(filters["search"])|
+								 models.ProposedProject.title.contains(filters["search"]))
+
+	return query.all()
 
 def getLimitedProposedProjects(limit):
 	return models.ProposedProject.query.limit(limit).all()
@@ -439,13 +545,14 @@ def deleteProposedProject(id):
 	db.session.delete(proposedProject)
 	db.session.commit()
 
-def getProposedProjectsTableData(sort, order, limit, offset, filters):
+def getProposedProjectsTableData(sort, order, limit, offset, filters, lab):
 	query = models.ProposedProject.query.filter()
 	if filters:
 		filters = json.loads(filters)
 		if "title" in filters:
 			query = query.filter(models.ProposedProject.title.contains(filters["title"]))				
-	
+	if lab:
+		query = query.filter_by(lab=lab)
 	if sort:
 		if sort == "title":
 			query = query.order_by(models.ProposedProject.title.desc() if order == "desc" else models.ProposedProject.title.asc())
@@ -478,26 +585,29 @@ def addAdmin(adminData):
 
 ############################ Overview ############################
 
-def getLabOverview():
+def getLabOverview(lab):
 	currentYear = utils.getRegistrationYear()
 	currentSemester = utils.getRegistrationSemester()
-	totalProjectsThisSemester = db.session.query(models.Project).filter_by(year=currentYear, semester=currentSemester).count()
-	finishedProjectsThisSemester = db.session.query(models.Project).filter_by(year=currentYear, semester=currentSemester, status="ציון").count()
-	totalProjects = getProjectsCount()
-	projects = {
-		
-	}
+	totalProjectsThisSemester = models.Project.query.filter_by(year=currentYear, semester=currentSemester)
+	finishedProjectsThisSemester = models.Project.query.filter_by(year=currentYear, semester=currentSemester, status="ציון")
+	totalProjects = models.Project.query
+	totalProposedProjects = models.ProposedProject.query
+	if lab:
+		totalProjectsThisSemester = totalProjectsThisSemester.filter_by(lab=lab.id)
+		finishedProjectsThisSemester = finishedProjectsThisSemester.filter_by(lab=lab.id)
+		totalProjects = totalProjects.filter_by(lab=lab.id)
+		totalProposedProjects = totalProposedProjects.filter_by(lab=lab.id)
+
 
 	totalStudents = getStudentsCount()
 	studentsThisSemester = db.session.query(models.Student).filter_by(year=currentYear, semester=currentSemester).count()
-	totalProposedProjects = getProposedProjectsCount()
 	totalSupervisors = getSupervisorsCount()
 	return {
 		"projects": {
-			"total": totalProjects,
+			"total": totalProjects.count(),
 			"thisSemester": {
-				"finished": finishedProjectsThisSemester,
-				"total": totalProjectsThisSemester
+				"finished": finishedProjectsThisSemester.count(),
+				"total": totalProjectsThisSemester.count()
 			}
 		},
 		"students": {
@@ -505,7 +615,7 @@ def getLabOverview():
 			"thisSemester": studentsThisSemester
 		},
 		"proposedProjects": {
-			"total": totalProposedProjects
+			"total": totalProposedProjects.count()
 		},
 		"supervisors": {
 			"total": totalSupervisors

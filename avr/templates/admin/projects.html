@@ -1,4 +1,5 @@
-{% extends "layout.html" %}
+{% extends "admin/admin-layout.html" %}
+{% set active_page = "projects" %}
 
 
 {% block styles %} 
@@ -41,42 +42,7 @@
 			}
 		}
 	</style>
-{% endblock styles %} 
-
-{% block navbar %}
-<a class="navbar-brand px-4" href="{{ url_for('home') }}">AVR Lab Managment</a>
-<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
- aria-expanded="false" aria-label="Toggle navigation">
-	<span class="navbar-toggler-icon"></span>
-</button>
-
-<div class="collapse navbar-collapse" id="navbarSupportedContent">
-	<ul class="navbar-nav mr-auto">
-		<li class="nav-item dropdown">
-			<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true"
-			 aria-expanded="false">Admin</a>
-			<div class="dropdown-menu " aria-labelledby="navbarDropdown">
-				<a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a>
-			</div>
-		</li>
-		<li class="nav-item">
-			<a class="nav-link" href="{{ url_for('labOverview') }}">Overview</a>
-		</li>
-		<li class="nav-item">
-			<a class="nav-link active" href="{{ url_for('manageProjects') }}">Projects</a>
-		</li>
-		<li class="nav-item">
-			<a class="nav-link" href="{{ url_for('manageProposedProjects') }}">Proposed Projects</a>
-		</li>
-		<li class="nav-item">
-			<a class="nav-link" href="{{ url_for('manageStudents') }}">Students</a>
-		</li>
-		<li class="nav-item">
-			<a class="nav-link" href="{{ url_for('manageSupervisors') }}">Supervisors</a>
-		</li>
-	</ul>
-</div>
-{% endblock navbar %}
+{% endblock styles %}
 
 {% block content %}
 <h1 style>Projects</h1>
@@ -102,6 +68,7 @@
 				<th data-field="semester" data-filter-control="select" data-sortable="true">Semester</th>
 				<th data-field="status" data-filter-control="select" data-sortable="true">Status</th>
 				<th data-field="title" data-sortable="true">Title</th>
+                <th data-field="lab" data-sortable="false" data-filter-control="select">Lab</th>
 				<th data-field="supervisorsNames" data-sortable="false">Supervisor(s)</th>
 			 	<th data-field="btnEdit"></th>
 				<th data-field="btnDelete"><button type="button" id="btnAddNewProject" class="btn btn-success "  data-toggle="modal" data-target="#addProjectModal"><i class="fa fa-plus-circle fa-fw" style=""></i> New</button></th>
@@ -109,6 +76,7 @@
 		</thead>
 	</table>
 
+{# ADD PROJECT#}
 	<div class="modal fade bg" id="addProjectModal" tabindex="-1" role="dialog" aria-labelledby="addProjectModalLabel" aria-hidden="true">
 			<div class="modal-dialog" role="document">
 				<div class="modal-content" style="color: #000;">
@@ -186,6 +154,22 @@
 										</div>
 									{% else %} 
 										{{ addForm.new_semester(class="custom-select form-control") }} 
+									{% endif %}
+								</div>
+							</div>
+
+                            <div class="form-group row">
+								{{ addForm.new_lab.label(class="col-md-3 col-form-label") }}
+								<div class="col-md-7">
+									{% if addForm.new_lab.errors %}
+										{{ addForm.new_lab(class="custom-select form-control is-invalid") }}
+										<div class="invalid-feedback">
+											{% for error in addForm.new_lab.errors %}
+												<span>{{ error }}</span>
+											{% endfor %}
+										</div>
+									{% else %}
+										{{ addForm.new_lab(class="custom-select form-control") }}
 									{% endif %}
 								</div>
 							</div>
@@ -415,6 +399,22 @@
 										</div>
 									{% else %} 
 										{{ editForm.semester(class="custom-select form-control") }} 
+									{% endif %}
+								</div>
+							</div>
+
+                            <div class="form-group row">
+								{{ editForm.lab.label(class="col-md-3 col-form-label") }}
+								<div class="col-md-7">
+									{% if editForm.lab.errors %}
+										{{ editForm.lab(class="custom-select form-control is-invalid") }}
+										<div class="invalid-feedback">
+											{% for error in editForm.lab.errors %}
+												<span>{{ error }}</span>
+											{% endfor %}
+										</div>
+									{% else %}
+										{{ editForm.lab(class="custom-select form-control") }}
 									{% endif %}
 								</div>
 							</div>
@@ -862,7 +862,8 @@
 			$("#editProjectForm #semester").val(projectData.semester);	
 			$("#editProjectForm #comments").val(projectData.comments);
 			$("#editProjectForm #grade").val(projectData.grade);
-			
+			$("#editProjectForm #lab").val(projectData.lab);
+
 			// clear students list and add all the students in the project
 			editProjectStudentsList = [];
 			$("#editProjectForm div[name='studentsList']").empty();	

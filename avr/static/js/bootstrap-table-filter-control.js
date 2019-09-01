@@ -390,7 +390,7 @@
                                     that.filterOptions[column.field].forEach(function(option) {
                                         addOptionToSelectControl(selectControl, option.value, option.text);
                                     });
-                                }                              
+                                }
                             }
                         }
                     }

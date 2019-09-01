@@ -7,6 +7,7 @@ from flask_bcrypt import Bcrypt
 from flask_login import LoginManager
 from flask_marshmallow import Marshmallow
 from flask_mail import Mail
+from flask_migrate import Migrate
 
 from sqlalchemy_utils import database_exists
 from sqlalchemy import Table, MetaData
@@ -26,8 +27,10 @@ app.logger.setLevel(logging.INFO)
 app.logger.addHandler(logHandler) 
 
 app.config['SECRET_KEY'] = os.environ.get('FLASK_SECRET_KEY')
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///../site.db'
 db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+
 bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
@@ -35,12 +38,12 @@ ma = Marshmallow(app)
 app.config['MAIL_SERVER'] = 'smtp.googlemail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = os.environ.get('EMAIL_USER')
-app.config['MAIL_PASSWORD'] = os.environ.get('EMAIL_PASS')
-#app.config['MAIL_USERNAME'] = ""
-#app.config['MAIL_PASSWORD'] = ""
+# app.config['MAIL_USERNAME'] = os.environ.get('EMAIL_USER')
+# app.config['MAIL_PASSWORD'] = os.environ.get('EMAIL_PASS')
+app.config['MAIL_USERNAME'] = "nitzan.project1@gmail.com"
+app.config['MAIL_PASSWORD'] = "1qaz_PL<"
 mail = Mail(app)
-app.config['RECAPTCHA_PUBLIC_KEY'] = ''
+app.config['RECAPTCHA_PUBLIC_KEY'] = '6Lc15p4UAAAAADxrYymaMVymTdx4gPDgwAotUK_G'
 app.config['RECAPTCHA_PRIVATE_KEY'] = os.environ.get('RECAPTCHA_PRIVATE_KEY')
 app.config['RECAPTCHA_DATA_ATTRS'] = {'theme': 'light'}
 app.config['JSON_AS_ASCII'] = False
@@ -61,4 +64,3 @@ if not database_exists("sqlite:///"+os.path.join("avr", "site.db")):
 		db.session.execute(create_view)
 	except Exception as e:
 		app.logger.error('error is: {}\n{}'.format(e, traceback.format_exc()))
-

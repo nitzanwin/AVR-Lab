@@ -22,7 +22,7 @@ class Student(db.Model):
 
 	firstNameHeb = db.Column(db.String(30), nullable=False)
 	lastNameHeb = db.Column(db.String(30), nullable=False)
-	firstNameEng =  db.Column(db.String(30), nullable=False)
+	firstNameEng = db.Column(db.String(30), nullable=False)
 	lastNameEng = db.Column(db.String(30), nullable=False)
 
 	academicStatus = db.Column(db.String(30), nullable=True)
@@ -62,7 +62,7 @@ class ProposedProject(db.Model):
 	image = db.Column(db.String(50), nullable=True)
 
 	supervisors = db.relationship('Supervisor', secondary='supervisor_proposed_project', backref=db.backref('proposedProjects', lazy='dynamic'))
-
+	lab = db.Column(db.Integer, db.ForeignKey('lab.id'), nullable=True)
 	@property
 	def supervisorsFullNameEng(self):
 		return [s.firstNameEng + ' ' + s.lastNameEng for s in self.supervisors]
@@ -91,6 +91,7 @@ class Project(db.Model):
 	gradeStatus = db.Column(db.Boolean, nullable=True, default=False)
 
 	courses = db.relationship('Course', secondary='student_project', backref=db.backref('projects', lazy='dynamic'))
+	lab = db.Column(db.Integer, db.ForeignKey('lab.id'), nullable=True)
 	
 	def __repr__(self):
 		return "Project({}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {})".format(self.id, self.title, self.semester, self.year, self.grade, self.comments, self.requirementsDoc, self.firstMeeting, self.halfwayPresentation, self.finalMeeting, self.projectReport, self.equipmentReturned, self.projectDoc, self.gradeStatus)
@@ -169,6 +170,19 @@ class Course(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
 	number = db.Column(db.String(20), unique=True, nullable=False)
 	name = db.Column(db.String(60), nullable=True)
+	lab = db.Column(db.Integer, db.ForeignKey('lab.id'), nullable=True)
 
 	def __repr__(self):
-		return "Course({}, {}, {})".format(self.id, self.number, self.name) 
+		return "Course({}, {}, {})".format(self.id, self.number, self.name)
+
+class Lab(db.Model):
+	id = db.Column(db.Integer, primary_key=True)
+	password = db.Column(db.String(60), nullable=False)
+	name = db.Column(db.String(30), nullable=False)
+	acronym = db.Column(db.String(10), nullable=False)
+	logo = db.Column(db.String(50), nullable=True)
+	website = db.Column(db.String(50), nullable=True)
+	description = db.Column(db.Text, nullable=True)
+
+	def __repr__(self):
+		return "Course({}, {})".format(self.id, self.name)

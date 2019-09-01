@@ -73,109 +73,34 @@
 			}
 	}
 </style>
-{% endblock styles %} 
-
-{% block navbar %}
-	<a class="navbar-brand px-4" href="{{ url_for('index') }}">
-		<img src="/static/images/headLogo.png" style="max-height: 30px;margin-bottom:5px;"/>	
-		AVR Lab 
-	</a>
-	<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-		<span class="navbar-toggler-icon"></span>
-	</button>
-
-	<div class="collapse navbar-collapse" id="navbarSupportedContent">
-		{% if student %}
-			<div class="navbar-container">
-				{% if student.profilePic %}
-					<img src="/static/images/profile/{{ student.profilePic }}" alt="student profile" class="avatar">
-				{% else %}
-					<img src="/static/images/profile/default.png" alt="default profile" class="avatar">
-				{% endif %}
-			</div>
-		{% endif %}
-		<ul class="navbar-nav mr-auto mt-2 mt-lg-0">
-		{% if student %}
-			<li class="nav-item dropdown my-2 my-lg-0">
-				<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-					{{ student.firstNameEng }} {{ student.lastNameEng }}
-				</a>
-				<div class="dropdown-menu " aria-labelledby="navbarDropdown">
-					<a class="dropdown-item" href="{{ url_for('home') }}">My Projects</a>
-					<a class="dropdown-item" href="{{ url_for('editAccount') }}">Edit Account</a>
-					<div class="dropdown-divider"></div>
-					<a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a>
-				</div>
-			</li>
-		{% endif %}
-			<li class="nav-item">
-				<a class="nav-link" href="#">About</a>
-			</li>
-			<li class="nav-item">
-				<a class="nav-link" href="{{ url_for('proposedProjects') }}">Proposed Projects</a>
-			</li>
-		</ul>
-		{% if admin %}	
-			<ul class="navbar-nav ml-auto mt-2 mt-lg-0">
-				<li class="nav-item">
-					<a class="nav-link" href="{{ url_for('home') }}">AVR Lab Managment</a>
-				</li>
-			</ul>
-		{% endif %}
-		
-		{% if not current_user.is_authenticated  %}
-			<ul class="navbar-nav ml-auto mt-2 mt-lg-0">
-				<li class="nav-item">
-					<a class="nav-link" href="{{ url_for('login') }}">Login</a>
-				</li>
-				<li class="nav-item">
-					<a class="nav-link" href="{{ url_for('register') }}">Register</a>
-				</li>
-			</ul>
-		{% endif %}
-	</div>
-{% endblock navbar %}
+{% endblock styles %}
 
 {% block content %}
-
-
-<div class="parallax">
-	<div id="mainHeader" class="container">
-		<h1>Virtual & Augmented<br>Reality Lab</h1>
-		<h2>Reality, reimagined.</h2>
-	</div>
-</div>
-
-<div id="logoImg"> 
-	<img src="/static/images/avrLogo.png" class="img-responsive logo">	
-</div>
-
-<div class="container">			
-	{% if proposedProjects %}
-	<h2 style="margin:2em 0 1em 0;">Our Proposed Projects</h2>
-	<div class="carousel">			
-		{% for proposedProject in proposedProjects %}
-			<div>
-				<a href="{{ url_for('proposedProjects') }}">
-					{% if proposedProject.image %}
-						<img class="mx-auto" style="width: 50vh;" src="/static/images/proposed_projects/{{proposedProject.image}}">
-					{% endif %}
-				</a>
-				<h5 style="margin:1em 0 0 0;">{{ proposedProject.title }}</h5>
-				<p style="white-space: pre-line;width:50%;margin:0 auto;">	
-					{{ proposedProject.description }}
-				</p>
-			</div>
-		{% endfor %}
-	</div>
-	<div class="pt-4">
-		<a href="{{ url_for('proposedProjects') }}" class="btn btn-primary btn-lg" role="button">See All</a>
-	</div>
-	{% endif %}
-</div>
-<div class="mt-2">
-	<img src="/static/images/powered_by.png" class="mt-5 img-responsive">
-</div>
+<h1>CS Labs</h1>
+<div class="container">
+  <div class="card-deck mt-4">
+    {% for lab in labs %}
+      <div class="card text-center">
+        {% if lab.logo %}
+            <img class="card-img-top" style="padding-top: 15px" src="../static/images/labs_logo/{{ lab.logo }}" alt="{{ lab.logo }}">
+        {% endif %}
+        <div class="card-body d-flex flex-column">
+            <h5 class="card-title ">{{ lab.name }}</h5>
+            <h3 class="card-subtitle mb-2 text-muted">{{ lab.acronym }}</h3>
+            <p class="card-text">{{ lab.description }}</p>
+            <a class="card-link" href="{{ url_for('showProposedProjects',lab=lab.id) }}">Proposed Projects</a>
+            <a class="card-link" href="{{ lab.website }}">Lab Website</a>
+        </div>
+      </div>
+    {% if loop.index % 3 == 0 %}
+      </div>
+      <div class="card-deck mt-4">
+    {% endif %}
+    {% endfor %}
+    {% if labs|length % 3 != 0  %}
+  		</div>
+		{% endif %}
+		<img src="/static/images/powered_by.png" class="mt-5 img-responsive mx-auto">
 {% endblock content %}
 
 {% block scripts %}
@@ -194,5 +119,9 @@
 				adaptiveHeight: true,
 			});
     });
+
+    function goToProjects(id){
+        console.info("HI THERE ", id);
+    }
   </script>	
 {% endblock scripts %}

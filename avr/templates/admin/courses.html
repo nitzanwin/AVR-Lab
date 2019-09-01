@@ -1,0 +1,321 @@
+{% extends "admin/admin-layout.html" %}
+{% set active_page = "courses" %}
+
+
+{% block styles %} 
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.10.0/bootstrap-table.min.css">
+	<style>
+		#studentsTable {
+			background-color: rgb(255, 255, 255);
+			border-radius: 10px;
+		}
+		#studentsTable tr {
+    	cursor: pointer;
+		}
+		#studentsTable tr label {
+    	cursor: pointer;
+		}
+		#addStudentsModal .fixed-table-toolbar > div {
+			margin-top: 0;
+			padding-top: 0;
+		}
+		/* #### fix for page content shifting left when opening studentsModal #### */
+		.modal {
+   	 		overflow-y: auto;
+		}
+		.modal-open {
+			overflow: auto;
+		}
+		.modal-open[style] {
+			padding-right: 0px !important;
+		}
+		/* ########################################################################*/
+		.pagination>.active>a, .pagination>.active>span, .pagination>.active>a:hover, 
+		.pagination>.active>span:hover, .pagination>.active>a:focus, 
+		.pagination>.active>span:focus {
+			font-weight: bold;
+		}
+		
+		@media (min-width: 1200px){
+			.container {
+				max-width: 1260px;
+			}
+		}
+	</style>
+{% endblock styles %}
+
+{% block content %}
+<h1 style>Courses</h1>
+<div class="container">
+	{% with messages = get_flashed_messages(with_categories=true) %} 
+		{% if messages %} 
+			{% for category, message in messages %}
+				{% if not addFormErrors and editFormErrorCourseId == '' %}
+					<div class="alert alert-{{ category }} mt-4">
+						{{ message }}
+					</div>
+				{% endif %}
+			{% endfor %} 
+		{% endif %} 
+	{% endwith %}
+	
+	<table id="mainTable" data-toggle="table" data-search="false" data-pagination="true" data-filter-control="true" data-show-export="false"
+	data-click-to-select="true" data-toolbar="#toolbar" data-pagination-v-align="bottom" data-strict-search="true" data-sort-order="desc" data-sort-name="number" data-url="/Admin/Courses/json" data-side-pagination="server">
+		<thead>
+			<tr>
+				<th data-field="number" data-sortable="false" data-filter-control="input">Number</th>
+				<th data-field="name" data-sortable="true" data-filter-control="input">Name</th>
+                <th data-field="lab" data-sortable="false" data-filter-control="select">Lab</th>
+				<th data-field="btnEdit"></th>
+				<th data-field="btnDelete">
+                    <button type="button" id="btnAddNewCourse" class="btn btn-success "  data-toggle="modal" data-target="#addCourseModal"><i class="fa fa-plus-circle fa-fw" style=""></i> New</button></th>
+			</tr>
+		</thead>
+	</table>
+
+{#     New Course Modal     #}
+	<div class="modal fade bg" id="addCourseModal" tabindex="-1" role="dialog" aria-labelledby="addCourseModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+				<div class="modal-content" style="color: #000;">
+					<div class="modal-header">
+						<h5 class="modal-title" id="addCourseModalLabel">Add Course</h5>
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
+					</div>
+					{% with messages = get_flashed_messages(with_categories=true) %}
+						{% if messages and addFormErrors %}
+							{% for category, message in messages %}
+								{% if category!="success" %}
+									<div class="alert alert-{{ category }}">
+										{{ message }}
+									</div>
+								{% endif %}
+							{% endfor %}
+						{% endif %}
+					{% endwith %}
+					<form class="form" id="addCourseForm" method="POST" action="{{ url_for('manageCourses') }}" enctype="multipart/form-data">
+						<input type="hidden" name="sentFormName" value="addCourseForm">
+						<div class="modal-body">
+							{{ addForm.hidden_tag() }}
+							<div class="form-group row">
+								{{ addForm.new_number.label(class="col-md-3 col-form-label") }}
+								<div class="col-md-7">
+									{% if addForm.new_number.errors %}
+										{{ addForm.new_number(class="custom-select form-control is-invalid") }}
+										<div class="invalid-feedback">
+											{% for error in addForm.new_number.errors %}
+												<span>{{ error }}</span>
+											{% endfor %}
+										</div>
+									{% else %}
+										{{ addForm.new_number(class="custom-select form-control") }}
+									{% endif %}
+								</div>
+							</div>
+
+
+							<div class="form-group row">
+								{{ addForm.new_name.label(class="col-md-3 col-form-label") }}
+								<div class="col-md-7">
+									{% if addForm.new_name.errors %}
+										{{ addForm.new_name(class="custom-select form-control is-invalid") }}
+										<div class="invalid-feedback">
+											{% for error in addForm.new_name.errors %}
+												<span>{{ error }}</span>
+											{% endfor %}
+										</div>
+									{% else %} 
+										{{ addForm.new_name(class="custom-select form-control") }}
+									{% endif %}
+								</div>
+							</div>
+
+                            <div class="form-group row">
+								{{ addForm.new_lab.label(class="col-md-3 col-form-label") }}
+								<div class="col-md-7">
+									{% if addForm.new_lab.errors %}
+										{{ addForm.new_lab(class="custom-select form-control is-invalid") }}
+										<div class="invalid-feedback">
+											{% for error in addForm.new_name.errors %}
+												<span>{{ error }}</span>
+											{% endfor %}
+										</div>
+									{% else %}
+										{{ addForm.new_lab(class="custom-select form-control") }}
+									{% endif %}
+								</div>
+							</div>
+					    </div>
+
+						<div class="modal-footer">
+							<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+							{{ addForm.submitAddForm(class="btn btn-success") }}
+						</div>
+					</form>
+				</div>
+			</div>
+	</div>
+	
+    {#     Edit Course Modal     #}
+	<div class="modal fade bg" id="editCourseModal" tabindex="-1" role="dialog" aria-labelledby="editCourseModalLabel" aria-hidden="true">
+			<div class="modal-dialog" role="document">
+				<div class="modal-content" style="color: #000;">
+					<div class="modal-header">
+						<h5 class="modal-title" id="editCourseModalLabel">Edit Course</h5>
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
+					</div>
+					{% with messages = get_flashed_messages(with_categories=true) %}
+						{% if messages and editFormErrorCourseId %}
+							{% for category, message in messages %}
+								{% if category!="success" %}
+									<div class="alert alert-{{ category }}">
+										{{ message }}
+									</div>
+								{% endif %}
+							{% endfor %}
+						{% endif %}
+					{% endwith %}
+					<form class="form" id="editCourseForm" method="POST" action="{{ url_for('manageCourses') }}" enctype="multipart/form-data">
+						<input type="hidden" name="sentFormName" value="editCourseForm">
+						<div class="modal-body">
+							{{ editForm.hidden_tag() }}
+                            <div class="form-group row">
+								{{ editForm.new_number.label(class="col-md-3 col-form-label") }}
+								<div class="col-md-7">
+									{% if editForm.new_number.errors %}
+										{{ editForm.new_number(class="custom-select form-control is-invalid") }}
+										<div class="invalid-feedback">
+											{% for error in editForm.new_number.errors %}
+												<span>{{ error }}</span>
+											{% endfor %}
+										</div>
+									{% else %}
+										{{ editForm.new_number(class="custom-select form-control") }}
+									{% endif %}
+								</div>
+							</div>
+
+
+							<div class="form-group row">
+								{{ editForm.new_name.label(class="col-md-3 col-form-label") }}
+								<div class="col-md-7">
+									{% if editForm.new_name.errors %}
+										{{ editForm.new_name(class="custom-select form-control is-invalid") }}
+										<div class="invalid-feedback">
+											{% for error in editForm.new_name.errors %}
+												<span>{{ error }}</span>
+											{% endfor %}
+										</div>
+									{% else %}
+										{{ editForm.new_name(class="custom-select form-control") }}
+									{% endif %}
+								</div>
+							</div>
+
+                            <div class="form-group row">
+								{{ editForm.new_lab.label(class="col-md-3 col-form-label") }}
+								<div class="col-md-7">
+									{% if editForm.new_lab.errors %}
+										{{ editForm.new_lab(class="custom-select form-control is-invalid") }}
+										<div class="invalid-feedback">
+											{% for error in editForm.new_name.errors %}
+												<span>{{ error }}</span>
+											{% endfor %}
+										</div>
+									{% else %}
+										{{ editForm.new_lab(class="custom-select form-control") }}
+									{% endif %}
+								</div>
+							</div>
+
+						</div>
+
+						<div class="modal-footer">
+							<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+							{{ editForm.submitEditForm(class="btn btn-success") }}
+						</div>
+					</form>
+				</div>
+			</div>
+	</div>
+
+    {#     Delete Course Modal     #}
+	<div class="modal fade" id="deleteCourseModal" tabindex="-1" role="dialog" aria-labelledby="deleteCourseModalLabel" aria-hidden="true">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="deleteCourseModalLabel">Delete Course</h5>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<div class="modal-body">
+					Are you sure?
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
+					<button type="button" onclick='document.getElementById("deleteForm").submit()' class="btn btn-primary">Yes</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<form id="deleteForm" method="POST" action="{{ url_for('manageCourses') }}/Delete">
+		{{ deleteForm.hidden_tag() }}
+	</form>
+
+
+    <img src="/static/images/powered_by.png" class="mt-5 img-responsive">
+</div>
+{% endblock content %}
+
+{% block scripts %}
+	<script src="/static/js/bootstrap-table.js"></script>
+	<script src="/static/js/bootstrap-table-filter-control.js"></script>
+
+	<script>
+		/* show file name in the input box when selecting a file */
+		$('#image').on('change',function(){
+			let fileName = $(this).val().split('\\').pop(); 
+			$(this).next('.custom-file-label').addClass("selected").html(fileName);
+		})
+
+		function getCourseData(id) {
+			var xmlhttp = new XMLHttpRequest();
+			var url = "/Admin/Courses/"+id+"/json";
+			xmlhttp.onreadystatechange = function () {
+				if (this.readyState == 4 && this.status == 200) {
+					var data = JSON.parse(this.responseText);
+					editCourse(data);
+				}
+			};
+			xmlhttp.open("GET", url, true);
+			xmlhttp.send();
+		}
+
+		function editCourse(courseData) {
+			$("#editCourseForm #courseId").val(courseData.id);
+			$("#editCourseForm #new_name").val(courseData.name);
+			$("#editCourseForm #new_number").val(courseData.number);
+			$("#editCourseForm #new_lab").val(courseData.lab);
+		}
+
+	    function deleteCourse(id){
+			$("#deleteForm").find('#deleteCourseId').val(id);
+		}
+
+		{% if addFormErrors %}
+			$('#addCourseModal').modal("show");
+		{% endif %}
+
+		{% if editFormErrorCourseId %}
+			getCourseData({{editFormErrorCourseId}});
+			$('#editCourseModal').modal("show");
+		{% endif %}
+
+	</script>
+
+{% endblock scripts %}

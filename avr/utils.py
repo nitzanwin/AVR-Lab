@@ -5,6 +5,7 @@ import datetime
 from avr import app
 import traceback
 from PIL import Image
+import flask_login
 
 def delete_image(imageName, folder):
 	if imageName is not None:
@@ -23,6 +24,9 @@ def delete_project_image(imageName):
 
 def delete_profile_image(imageName):
 	delete_image(imageName, "profile")
+
+def delete_logo_image(imageName):
+	delete_image(imageName, "labs_logo")
 
 
 def copy_project_image_from_proposed_project(matchingImageName):
@@ -91,3 +95,16 @@ def getRegistrationYear():
 		return str(currentYear)
 	else:
 		return str(currentYear+1)
+
+#---------- authentications -------------#
+def	check_user_admin():
+	return flask_login.current_user.is_authenticated and flask_login.current_user.userType == "admin"
+
+def	check_user_lab_admin():
+	return flask_login.current_user.is_authenticated and (flask_login.current_user.userType == "admin" or flask_login.current_user.userType == "lab")
+
+def	check_user_lab():
+	return flask_login.current_user.is_authenticated and flask_login.current_user.userType == "lab"
+
+def	check_user_student():
+	return flask_login.current_user.is_authenticated and flask_login.current_user.userType == "student"

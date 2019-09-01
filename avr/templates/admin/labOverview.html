@@ -1,5 +1,5 @@
-{% extends "layout.html" %}
-
+{% extends "admin/admin-layout.html" %}
+{% set active_page = "overview" %}
 
 {% block styles %} 
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.10.0/bootstrap-table.min.css">
@@ -13,42 +13,7 @@
 			}
 		}
 	</style>
-{% endblock styles %} 
-
-{% block navbar %}
-<a class="navbar-brand px-4" href="{{ url_for('admin') }}">AVR Lab Managment</a>
-<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
- aria-expanded="false" aria-label="Toggle navigation">
-	<span class="navbar-toggler-icon"></span>
-</button>
-
-<div class="collapse navbar-collapse" id="navbarSupportedContent">
-	<ul class="navbar-nav mr-auto">
-		<li class="nav-item dropdown">
-			<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true"
-			 aria-expanded="false">Admin</a>
-			<div class="dropdown-menu " aria-labelledby="navbarDropdown">
-				<a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a>
-			</div>
-		</li>
-		<li class="nav-item">
-			<a class="nav-link active" href="{{ url_for('labOverview') }}">Overview</a>
-		</li>
-		<li class="nav-item">
-			<a class="nav-link" href="{{ url_for('manageProjects') }}">Projects</a>
-		</li>
-		<li class="nav-item">
-			<a class="nav-link" href="{{ url_for('manageProposedProjects') }}">Proposed Projects</a>
-		</li>
-		<li class="nav-item">
-			<a class="nav-link" href="{{ url_for('manageStudents') }}">Students</a>
-		</li>
-		<li class="nav-item">
-			<a class="nav-link" href="{{ url_for('manageSupervisors') }}">Supervisors</a>
-		</li>
-	</ul>
-</div>
-{% endblock navbar %}
+{% endblock styles %}
 
 {% block content %}
 <div class="container">

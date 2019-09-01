@@ -1,0 +1,491 @@
+{% extends "admin/admin-layout.html" %}
+{% set active_page = "lab" %}
+
+
+{% block styles %} 
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.10.0/bootstrap-table.min.css">
+	<style>
+		#studentsTable {
+			background-color: rgb(255, 255, 255);
+			border-radius: 10px;
+		}
+		#studentsTable tr {
+    	cursor: pointer;
+		}
+		#studentsTable tr label {
+    	cursor: pointer;
+		}
+		#addStudentsModal .fixed-table-toolbar > div {
+			margin-top: 0;
+			padding-top: 0;
+		}
+		/* #### fix for page content shifting left when opening studentsModal #### */
+		.modal {
+   	 		overflow-y: auto;
+		}
+		.modal-open {
+			overflow: auto;
+		}
+		.modal-open[style] {
+			padding-right: 0px !important;
+		}
+		/* ########################################################################*/
+		.pagination>.active>a, .pagination>.active>span, .pagination>.active>a:hover, 
+		.pagination>.active>span:hover, .pagination>.active>a:focus, 
+		.pagination>.active>span:focus {
+			font-weight: bold;
+		}
+		
+		@media (min-width: 1200px){
+			.container {
+				max-width: 1260px;
+			}
+		}
+	</style>
+{% endblock styles %}
+
+{% block content %}
+<h1 style>Labs</h1>
+<div class="container">
+	{% with messages = get_flashed_messages(with_categories=true) %} 
+		{% if messages %} 
+			{% for category, message in messages %}
+				{% if not addFormErrors and editFormErrorLabId == '' %}
+					<div class="alert alert-{{ category }} mt-4">
+						{{ message }}
+					</div>
+				{% endif %}
+			{% endfor %} 
+		{% endif %} 
+	{% endwith %}
+	
+	<table id="mainTable" data-toggle="table" data-search="false" data-pagination="true" data-filter-control="true" data-show-export="false"
+	data-click-to-select="true" data-toolbar="#toolbar" data-pagination-v-align="bottom" data-strict-search="true" data-sort-order="desc" data-sort-name="number" data-url="/Admin/Labs/json" data-side-pagination="server">
+		<thead>
+			<tr>
+                <th data-field="logo" data-sortable="false">Logo</th>
+				<th data-field="name">Name</th>
+				<th data-field="acronym">Acronym</th>
+                <th data-field="website">Website</th>
+                <th data-field="description" data-sortable="false">Description</th>
+				<th data-field="btnEdit"></th>
+				<th data-field="btnDelete">
+                    <button type="button" id="btnAddNewLab" class="btn btn-success "  data-toggle="modal" data-target="#addLabModal"><i class="fa fa-plus-circle fa-fw" style=""></i> New</button></th>
+			</tr>
+		</thead>
+	</table>
+
+    {#     New Lab Modal     #}
+	<div class="modal fade bg" id="addLabModal" tabindex="-1" role="dialog" aria-labelledby="addLabModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" id="addLabModalLabel">Add Lab</h5>
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
+					</div>
+					{% with messages = get_flashed_messages(with_categories=true) %}
+						{% if messages and addFormErrors %}
+							{% for category, message in messages %}
+								{% if category!="success" %}
+									<div class="alert alert-{{ category }}">
+										{{ message }}
+									</div>
+								{% endif %}
+							{% endfor %}
+						{% endif %}
+					{% endwith %}
+					<form id="addLabForm" method="POST" action="{{ url_for('manageLabs') }}" enctype="multipart/form-data">
+						{{ addForm.hidden_tag() }}
+                        <input type="hidden" name="sentFormName" value="addLabForm">
+						<div class="modal-body">
+                            <div class="form-group row required">
+								{{ addForm.new_name.label(class="col-md-3 col-form-label") }}
+								<div class="col-md-7">
+									{% if addForm.new_name.errors %}
+										{{ addForm.new_name(class="form-control is-invalid") }}
+										<div class="invalid-feedback">
+											{% for error in addForm.new_name.errors %}
+												<span>{{ error }}</span>
+											{% endfor %}
+										</div>
+									{% else %}
+										{{ addForm.new_name(class="form-control") }}
+									{% endif %}
+								</div>
+                                <div class="col-md-1"></div>
+							</div>
+
+
+							<div class="form-group row required">
+								{{ addForm.new_acronym.label(class="col-md-3 col-form-label") }}
+								<div class="col-md-7">
+									{% if addForm.new_acronym.errors %}
+										{{ addForm.new_acronym(class="form-control is-invalid") }}
+										<div class="invalid-feedback">
+											{% for error in addForm.new_acronym.errors %}
+												<span>{{ error }}</span>
+											{% endfor %}
+										</div>
+									{% else %} 
+										{{ addForm.new_acronym(class="form-control") }}
+									{% endif %}
+								</div>
+                                <div class="col-md-1"></div>
+							</div>
+
+                            <div class="form-group row">
+                                {{ addForm.logo.label(class="col-md-3 col-form-label text-center") }}
+                                <div class="col-md-6">
+                                    {% if addForm.logo.errors %}
+                                    {{ addForm.logo(class="custom-file-input is-invalid") }}
+                                        <div class="invalid-feedback">
+                                            {% for error in addForm.logo.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {{ addForm.logo(class="custom-file-input") }}
+                                    {% endif %}
+                                    <label class="custom-file-label text-left" for="logo">Choose file</label>
+                                </div>
+                                <div class="col-md-1"></div>
+                            </div>
+
+                            <div class="form-group row required">
+								{{ addForm.website.label(class="col-md-3 col-form-label") }}
+								<div class="col-md-7">
+									{% if addForm.website.errors %}
+										{{ addForm.website(class="form-control is-invalid") }}
+										<div class="invalid-feedback">
+											{% for error in addForm.website.errors %}
+												<span>{{ error }}</span>
+											{% endfor %}
+										</div>
+									{% else %}
+										{{ addForm.website(class="form-control") }}
+									{% endif %}
+								</div>
+                                <div class="col-md-1"></div>
+							</div>
+
+                            <div class="form-group row">
+								{{ addForm.description.label(class="col-md-3 col-form-label") }}
+								<div class="col-md-7 mb-2">
+									{% if addForm.description.errors %}
+									{{ addForm.description(class="form-control is-invalid", rows="10", style="height:100%;") }}
+										<div class="invalid-feedback">
+											{% for error in addForm.description.errors %}
+												<span>{{ error }}</span>
+											{% endfor %}
+										</div>
+									{% else %}
+										{{ addForm.description(class="form-control", rows="10", style="height:100%;") }}
+									{% endif %}
+								</div>
+								<div class="col-md-1"></div>
+							</div>
+
+                            <div class="form-group row justify-content-md-center">
+                                {{ addForm.new_password.label(class="col-md-3 col-form-label") }}
+                                <div class="col-md-7">
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <div class="input-group-text"><i class="fas fa-key"></i></div>
+                                        </div>
+                                        {% if addForm.new_password.errors %}
+                                            {{ addForm.new_password(class="form-control form-control-lg is-invalid") }}
+                                            <div class="invalid-feedback">
+                                                {% for error in addForm.new_password.errors %}
+                                                    <span>{{ error }}</span>
+                                                {% endfor %}
+                                            </div>
+                                        {% else %}
+                                            {{ addForm.new_password(class="form-control form-control-lg") }}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-1"></div>
+                            </div>
+
+                            <div class="form-group row justify-content-md-center">
+                                {{ addForm.confirmPassword.label(class="col-md-3 col-form-label") }}
+                                <div class="col-md-7">
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <div class="input-group-text"><i class="fas fa-key"></i></div>
+                                        </div>
+                                        {% if addForm.confirmPassword.errors %}
+                                            {{ addForm.confirmPassword(class="form-control form-control-lg is-invalid") }}
+                                            <div class="invalid-feedback">
+                                                {% for error in addForm.confirmPassword.errors %}
+                                                    <span>{{ error }}</span>
+                                                {% endfor %}
+                                            </div>
+                                        {% else %}
+                                            {{ addForm.confirmPassword(class="form-control form-control-lg") }}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-1"></div>
+                            </div>
+					    </div>
+
+						<div class="modal-footer">
+							<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+							{{ addForm.submitAddForm(class="btn btn-success") }}
+						</div>
+					</form>
+				</div>
+			</div>
+	</div>
+	
+    {#     Edit Lab Modal     #}
+	<div class="modal fade bg" id="editLabModal" tabindex="-1" role="dialog" aria-labelledby="editLabModalLabel" aria-hidden="true">
+			<div class="modal-dialog" role="document">
+				<div class="modal-content" style="color: #000;">
+					<div class="modal-header">
+						<h5 class="modal-title" id="editLabModalLabel">Edit Lab</h5>
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
+					</div>
+					{% with messages = get_flashed_messages(with_categories=true) %}
+						{% if messages and editFormErrorLabId %}
+							{% for category, message in messages %}
+								{% if category!="success" %}
+									<div class="alert alert-{{ category }}">
+										{{ message }}
+									</div>
+								{% endif %}
+							{% endfor %}
+						{% endif %}
+					{% endwith %}
+					<form class="form" id="editLabForm" method="POST" action="{{ url_for('manageLabs') }}" enctype="multipart/form-data">
+						<input type="hidden" name="sentFormName" value="editLabForm">
+						<div class="modal-body">
+							{{ editForm.hidden_tag() }}
+                            <div class="form-group row">
+								{{ editForm.new_name.label(class="col-md-3 col-form-label") }}
+								<div class="col-md-7">
+									{% if editForm.new_name.errors %}
+										{{ editForm.new_name(class="custom-select form-control is-invalid") }}
+										<div class="invalid-feedback">
+											{% for error in editForm.new_name.errors %}
+												<span>{{ error }}</span>
+											{% endfor %}
+										</div>
+									{% else %}
+										{{ editForm.new_name(class="custom-select form-control") }}
+									{% endif %}
+								</div>
+                                <div class="col-md-1"></div>
+							</div>
+
+
+							<div class="form-group row">
+								{{ editForm.new_acronym.label(class="col-md-3 col-form-label") }}
+								<div class="col-md-7">
+									{% if editForm.new_acronym.errors %}
+										{{ editForm.new_acronym(class="custom-select form-control is-invalid") }}
+										<div class="invalid-feedback">
+											{% for error in editForm.new_acronym.errors %}
+												<span>{{ error }}</span>
+											{% endfor %}
+										</div>
+									{% else %}
+										{{ editForm.new_acronym(class="custom-select form-control") }}
+									{% endif %}
+								</div>
+                                <div class="col-md-1"></div>
+							</div>
+
+                            <div class="form-group row">
+                                {{ editForm.new_logo.label(class="col-md-3 col-form-label text-center") }}
+                                <div class="col-md-6">
+                                    {% if editForm.new_logo.errors %}
+                                    {{ editForm.new_logo(class="custom-file-input is-invalid") }}
+                                        <div class="invalid-feedback">
+                                            {% for error in editForm.new_logo.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {{ editForm.new_logo(class="custom-file-input") }}
+                                    {% endif %}
+                                    <label class="custom-file-label text-left" for="new_logo">Choose file</label>
+                                </div>
+                                <div class="col-md-1"></div>
+                            </div>
+
+                            <div class="form-group row required">
+								{{ editForm.website.label(class="col-md-3 col-form-label") }}
+								<div class="col-md-7">
+									{% if editForm.website.errors %}
+										{{ editForm.website(class="form-control is-invalid") }}
+										<div class="invalid-feedback">
+											{% for error in editForm.website.errors %}
+												<span>{{ error }}</span>
+											{% endfor %}
+										</div>
+									{% else %}
+										{{ editForm.website(class="form-control") }}
+									{% endif %}
+								</div>
+                                <div class="col-md-1"></div>
+							</div>
+
+                            <div class="form-group row">
+								{{ editForm.description.label(class="col-md-3 col-form-label") }}
+								<div class="col-md-7 mb-2">
+									{% if editForm.description.errors %}
+									{{ editForm.description(class="form-control is-invalid", rows="10", style="height:100%;") }}
+										<div class="invalid-feedback">
+											{% for error in editForm.description.errors %}
+												<span>{{ error }}</span>
+											{% endfor %}
+										</div>
+									{% else %}
+										{{ editForm.description(class="form-control", rows="10", style="height:100%;") }}
+									{% endif %}
+								</div>
+								<div class="col-md-1"></div>
+							</div>
+
+                            <div class="form-group row justify-content-md-center">
+                                {{ editForm.new_password.label(class="col-md-3 col-form-label") }}
+                                <div class="col-md-7">
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <div class="input-group-text"><i class="fas fa-key"></i></div>
+                                        </div>
+                                        {% if editForm.new_password.errors %}
+                                            {{ editForm.new_password(class="form-control form-control-lg is-invalid") }}
+                                            <div class="invalid-feedback">
+                                                {% for error in editForm.new_password.errors %}
+                                                    <span>{{ error }}</span>
+                                                {% endfor %}
+                                            </div>
+                                        {% else %}
+                                            {{ editForm.new_password(class="form-control form-control-lg") }}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-1"></div>
+                            </div>
+
+                            <div class="form-group row justify-content-md-center">
+                                {{ editForm.confirmPassword.label(class="col-md-3 col-form-label") }}
+                                <div class="col-md-7">
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <div class="input-group-text"><i class="fas fa-key"></i></div>
+                                        </div>
+                                        {% if editForm.confirmPassword.errors %}
+                                            {{ editForm.confirmPassword(class="form-control form-control-lg is-invalid") }}
+                                            <div class="invalid-feedback">
+                                                {% for error in editForm.confirmPassword.errors %}
+                                                    <span>{{ error }}</span>
+                                                {% endfor %}
+                                            </div>
+                                        {% else %}
+                                            {{ editForm.confirmPassword(class="form-control form-control-lg") }}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-1"></div>
+                            </div>
+
+
+						</div>
+
+						<div class="modal-footer">
+							<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+							{{ editForm.submitEditForm(class="btn btn-success") }}
+						</div>
+					</form>
+				</div>
+			</div>
+	</div>
+
+    {#     Delete Lab Modal     #}
+	<div class="modal fade" id="deleteLabModal" tabindex="-1" role="dialog" aria-labelledby="deleteLabModalLabel" aria-hidden="true">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="deleteLabModalLabel">Delete Lab</h5>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<div class="modal-body">
+					Are you sure?
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
+					<button type="button" onclick='document.getElementById("deleteForm").submit()' class="btn btn-primary">Yes</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<form id="deleteForm" method="POST" action="{{ url_for('manageLabs') }}/Delete">
+		{{ deleteForm.hidden_tag() }}
+	</form>
+
+
+    <img src="/static/images/powered_by.png" class="mt-5 img-responsive">
+</div>
+{% endblock content %}
+
+{% block scripts %}
+	<script src="/static/js/bootstrap-table.js"></script>
+	<script src="/static/js/bootstrap-table-filter-control.js"></script>
+
+	<script>
+		/* show file name in the input box when selecting a file */
+		$('#new_logo, #logo').on('change', function(){
+			let fileName = $(this).val().split('\\').pop();
+			$(this).next('.custom-file-label').addClass("selected").html(fileName);
+		})
+
+		function getLabData(id) {
+			var xmlhttp = new XMLHttpRequest();
+			var url = "/Admin/Labs/"+id+"/json";
+			xmlhttp.onreadystatechange = function () {
+				if (this.readyState == 4 && this.status == 200) {
+					var data = JSON.parse(this.responseText);
+					editLab(data);
+				}
+			};
+			xmlhttp.open("GET", url, true);
+			xmlhttp.send();
+		}
+
+		function editLab(labData) {
+			$("#editLabForm #labId").val(labData.id);
+			$("#editLabForm #new_name").val(labData.name);
+			$("#editLabForm #new_acronym").val(labData.acronym);
+			$("#editLabForm #new_password").val(labData.password);
+			$("#editLabForm #new_logo").val(labData.logo);
+			$("#editLabForm #description").val(labData.description);
+			$("#editLabForm #website").val(labData.website);
+		}
+
+	    function deleteLab(id){
+			$("#deleteForm").find('#deleteLabId').val(id);
+		}
+
+		{% if addFormErrors %}
+			$('#addLabModal').modal("show");
+		{% endif %}
+
+		{% if editFormErrorLabId %}
+			getLabData({{editFormErrorLabId}});
+			$('#editLabModal').modal("show");
+		{% endif %}
+
+	</script>
+
+{% endblock scripts %}

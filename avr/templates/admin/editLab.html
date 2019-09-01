@@ -1,0 +1,171 @@
+{% extends "admin/admin-layout.html" %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/layout.css') }}">
+{% endblock styles %}
+
+{% block content %}
+<h1>Edit Lab</h1>
+<div class="container mt-4">
+	<form method="POST" action="" enctype="multipart/form-data">
+		{{ form.hidden_tag() }}
+		<fieldset class="form-group">
+			<div class="col-sm-7 mx-auto">
+				{% with messages = get_flashed_messages(with_categories=true) %} {% if messages %} {% for category, message in messages %}
+				<div class="alert alert-{{ category }}">
+					{{ message }}
+				</div>
+				{% endfor %} {% endif %} {% endwith %}
+			</div>
+        <div class="form-group row">
+								{{ form.new_name.label(class="col-md-1 col-form-label") }}
+								<div class="col-md-4">
+									{% if form.new_name.errors %}
+										{{ form.new_name(class="custom-select form-control is-invalid") }}
+										<div class="invalid-feedback">
+											{% for error in form.new_name.errors %}
+												<span>{{ error }}</span>
+											{% endfor %}
+										</div>
+									{% else %}
+										{{ form.new_name(class="custom-select form-control") }}
+									{% endif %}
+								</div>
+
+							</div>
+
+
+							<div class="form-group row">
+								{{ form.new_acronym.label(class="col-md-1 col-form-label") }}
+								<div class="col-md-4">
+									{% if form.new_acronym.errors %}
+										{{ form.new_acronym(class="custom-select form-control is-invalid") }}
+										<div class="invalid-feedback">
+											{% for error in form.new_acronym.errors %}
+												<span>{{ error }}</span>
+											{% endfor %}
+										</div>
+									{% else %}
+										{{ form.new_acronym(class="custom-select form-control") }}
+									{% endif %}
+								</div>
+
+							</div>
+
+                            <div class="form-group row">
+                                {{ form.new_logo.label(class="col-md-1 col-form-label text-center") }}
+                                <div class="col-md-4">
+                                    {% if form.new_logo.errors %}
+                                    {{ form.new_logo(class="custom-file-input is-invalid") }}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.new_logo.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {{ form.new_logo(class="custom-file-input") }}
+                                    {% endif %}
+                                    <label class="custom-file-label text-left" for="new_logo">Choose file</label>
+                                </div>
+
+                            </div>
+
+                            <div class="form-group row required">
+								{{ form.website.label(class="col-md-1 col-form-label") }}
+								<div class="col-md-4">
+									{% if form.website.errors %}
+										{{ form.website(class="form-control is-invalid") }}
+										<div class="invalid-feedback">
+											{% for error in form.website.errors %}
+												<span>{{ error }}</span>
+											{% endfor %}
+										</div>
+									{% else %}
+										{{ form.website(class="form-control") }}
+									{% endif %}
+								</div>
+
+							</div>
+
+                            <div class="form-group row">
+								{{ form.description.label(class="col-md-1 col-form-label") }}
+								<div class="col-md-4 mb-2">
+									{% if form.description.errors %}
+									{{ form.description(class="form-control is-invalid", rows="10", style="height:100%;") }}
+										<div class="invalid-feedback">
+											{% for error in form.description.errors %}
+												<span>{{ error }}</span>
+											{% endfor %}
+										</div>
+									{% else %}
+										{{ form.description(class="form-control", rows="10", style="height:100%;") }}
+									{% endif %}
+								</div>
+
+							</div>
+
+                            <div class="form-group row justify-content-md-center">
+                                {{ form.new_password.label(class="col-md-1 col-form-label") }}
+                                <div class="col-md-4">
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <div class="input-group-text"><i class="fas fa-key"></i></div>
+                                        </div>
+                                        {% if form.new_password.errors %}
+                                            {{ form.new_password(class="form-control form-control-lg is-invalid") }}
+                                            <div class="invalid-feedback">
+                                                {% for error in form.new_password.errors %}
+                                                    <span>{{ error }}</span>
+                                                {% endfor %}
+                                            </div>
+                                        {% else %}
+                                            {{ form.new_password(class="form-control form-control-lg") }}
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <div class="form-group row justify-content-md-center">
+                                {{ form.confirmPassword.label(class="col-md-1 col-form-label") }}
+                                <div class="col-md-4">
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <div class="input-group-text"><i class="fas fa-key"></i></div>
+                                        </div>
+                                        {% if form.confirmPassword.errors %}
+                                            {{ form.confirmPassword(class="form-control form-control-lg is-invalid") }}
+                                            <div class="invalid-feedback">
+                                                {% for error in form.confirmPassword.errors %}
+                                                    <span>{{ error }}</span>
+                                                {% endfor %}
+                                            </div>
+                                        {% else %}
+                                            {{ form.confirmPassword(class="form-control form-control-lg") }}
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                            </div>
+
+
+		</fieldset>
+
+		<div class="form-group my-4">
+			{{ form.submitEditForm(class="btn btn-primary col-sm-2 btn-lg") }}
+		</div>
+
+	</form>
+	<img src="/static/images/powered_by.png" class="mt-5 img-responsive">
+	</div>
+{% endblock content %}
+
+{% block scripts %}
+	<script>
+		/* show file name in the input box when selecting a file */
+		$('.custom-file-input').on('change', function() { 
+			let fileName = $(this).val().split('\\').pop(); 
+			$(this).next('.custom-file-label').addClass("selected").html(fileName); 
+		});
+	</script>
+{% endblock scripts %}

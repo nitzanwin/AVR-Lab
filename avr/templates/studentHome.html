@@ -1,42 +1,9 @@
-{% extends "layout.html" %} 
+{% extends "layout.html" %}
+{% set active_page = "studentHome" %}
+
 {% block styles %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/layout.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/layout.css') }}">
 {% endblock styles %}
-
-{% block navbar %}
-	<a class="navbar-brand px-4" href="{{ url_for('index') }}">
-		<img src="/static/images/headLogo.png" style="max-height: 30px;margin-bottom:5px;"/>	
-		AVR Lab 
-	</a>
-	<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-		<span class="navbar-toggler-icon"></span>
-	</button>
-
-	<div class="collapse navbar-collapse" id="navbarSupportedContent">
-		<div class="navbar-container">
-			{% if student.profilePic %}
-				<img src="/static/images/profile/{{ student.profilePic }}" alt="student profile" class="avatar">
-			{% else %}
-				<img src="/static/images/profile/default.png" alt="default profile" class="avatar">
-			{% endif %}
-		</div>
-		<ul class="navbar-nav mr-auto mt-2 mt-lg-0">
-			<li class="nav-item dropdown my-2 my-lg-0">
-				<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-					{{ student.firstNameEng }} {{ student.lastNameEng }}
-				</a>
-				<div class="dropdown-menu " aria-labelledby="navbarDropdown">
-				<a class="dropdown-item" href="{{ url_for('editAccount') }}">Edit Account</a>
-				<div class="dropdown-divider"></div>
-				<a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a>
-				</div>
-			</li>	
-			<li class="nav-item">
-				<a class="nav-link active" href="{{ url_for('home') }}">My Projects</a>
-			</li>
-		</ul>
-	</div>
-{% endblock navbar %}
 
 {% block content %}
 <h1>My Projects</h1>

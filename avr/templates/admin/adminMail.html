@@ -1,0 +1,295 @@
+{% extends "admin/admin-layout.html" %}
+{% set active_page = "mail" %}
+
+
+{% block styles %}
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.10.0/bootstrap-table.min.css">
+	<style>
+        @import "/static/css/tagsInput.css";
+
+        .selectModal {
+			background-color: rgb(255, 255, 255);
+			border-radius: 10px;
+		}
+		.selectModal tr {
+    	cursor: pointer;
+		}
+		.selectModal tr label {
+    	cursor: pointer;
+		}
+		#addStudentsModal .fixed-table-toolbar > div {
+			margin-top: 0;
+			padding-top: 0;
+		}
+
+        .selectModal .selectedRow {
+            background-color: rgba(166, 241, 176, 0.35);
+        }
+
+
+		/* #### fix for page content shifting left when opening studentsModal #### */
+		.modal {
+   	 		overflow-y: auto;
+		}
+		.modal-open {
+			overflow: auto;
+		}
+		.modal-open[style] {
+			padding-right: 0px !important;
+		}
+		/* ########################################################################*/
+		.pagination>.active>a, .pagination>.active>span, .pagination>.active>a:hover,
+		.pagination>.active>span:hover, .pagination>.active>a:focus,
+		.pagination>.active>span:focus {
+			font-weight: bold;
+		}
+
+		@media (min-width: 1200px){
+			.container {
+				max-width: 1260px;
+			}
+		}
+
+	</style>
+{% endblock styles %}
+
+{% block content %}
+
+<h1> Mail </h1>
+<div class="container" >
+    <form class="form" method="POST" action="{{ url_for('adminMail') }}">
+        <div class="modal-body">
+            {{ form.hidden_tag() }}
+            <div class="form-group row justify-content-md-center">
+                <div class="col-sm-8">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }}">
+                                    {{ message }}
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                </div>
+            </div>
+
+            <div class="form-group row justify-content-md-center">
+                {{ form.email.label(class="col-md-1 col-form-label") }}
+                <div class="col-md-7">
+					<div class="input-group">
+{#                        <input data-role="tagsinput">#}
+{#                        <input class="form-control form-control-lg tags"/>#}
+						{% if form.email.errors %}
+							{{ form.email(class="form-control form-control-lg is-invalid tags") }}
+							<div class="invalid-feedback">
+								{% for error in form.email.errors %}
+									<span>{{ error }}</span>
+								{% endfor %}
+							</div>
+						{% else %}
+							{{ form.email(class="form-control form-control-lg tags") }}
+						{% endif %}
+
+                        <div class="input-group-append">
+                            <button class="btn btn-outline-secondary dropdown" role="button" data-toggle="dropdown" aria-haspopup="true"
+                                      aria-expanded="false">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
+                                <a name="btnProjects" class="dropdown-item" data-toggle='modal' data-target='#addProjectModal' onclick="onProjectModal()">Projects</a>
+                                <a name="btnStudents" class="dropdown-item" data-toggle='modal' data-target='#addStudentsModal' onclick="onStudentModal()">Students</a>
+
+                                <div class="dropdown-divider"></div>
+                                <a name="btnAll" class="dropdown-item" data-toggle='modal' data-target='#addStudentsModal'>All</a>
+                            </div>
+                        </div>
+					</div>
+				</div>
+			</div>
+
+
+            <div class="form-group row">
+                {{ form.title.label(class="col-md-1 col-form-label") }}
+                <div class="col-md-7">
+                    {% if form.title.errors %}
+                        {{ form.title(class="form-control is-invalid") }}
+                        <div class="invalid-feedback">
+                            {% for error in form.title.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {{ form.title(class="form-control") }}
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-group row">
+                {{ form.content.label(class="col-md-1 col-form-label") }}
+                <div class="col-md-7">
+                    {% if form.content.errors %}
+                        {{ form.content(class="form-control is-invalid", rows="6", style="height:100%;direction:rtl;") }}
+                        <div class="invalid-feedback">
+                            {% for error in form.content.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {{ form.content(class="form-control", rows="6", style="height:100%;direction:rtl;") }}
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+        {{ form.submitForm(class="btn btn-success") }}
+    </form>
+    <img src="/static/images/powered_by.png" class="mt-5 img-responsive">
+</div>
+
+<!-- ###################  addStudentsModal #################################### -->
+<div class="modal fade bg" id="addStudentsModal" data-backdrop="true" tabindex="-1" role="dialog" aria-labelledby="addStudentsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content" style="color: #000;">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addStudentsModalLabel">Add Students</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+                <div class="modal-body">
+                    <table id="studentsTable" class="selectModal" data-toggle="table" data-search="false" data-pagination="true" data-filter-control="true"
+                           data-show-export="false" data-click-to-select="true" data-pagination-v-align="bottom" data-sort-name="registrationYear"
+                           data-sort-order="desc" data-strict-search="false" data-url="/Admin/StudentsForProject/json"
+                           data-side-pagination="server" data-unique-id="id">
+                        <thead>
+                            <tr>
+                                <th data-field="profilePic" data-formatter="" data-sortable="false">Profile Picture</th>
+                                <th data-field="registrationYear" data-filter-control="select" data-sortable="true">Year</th>
+                                <th data-field="registrationSemester" data-filter-control="select" data-sortable="true">Semester</th>
+                                <th data-field="studentId" data-sortable="true">Id</th>
+                                <th data-field="firstNameHeb" data-sortable="true" data-filter-control="input">First Name</th>
+                                <th data-field="lastNameHeb" data-sortable="true" data-filter-control="input">Last Name</th>
+                                <th data-field="id" data-class='hiddenColumn'></th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-success" id="btnSaveStudentChanges" onclick='addSelectedStudents()' data-dismiss="modal">Add</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+</div>
+<!-- #################### end of addStudentsModal  ######################### -->
+
+<!-- ###################  addProjectsModal #################################### -->
+<div class="modal fade bg" id="addProjectModal" data-backdrop="true" tabindex="-1" role="dialog" aria-labelledby="addProjectModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content" style="color: #000;">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addStudentsModalLabel">Add Project's Students</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+                <div class="modal-body">
+                    <table id="projectsTable" class="selectModal" data-toggle="table" data-search="false" data-pagination="true" data-filter-control="true"
+                           data-show-export="false" data-click-to-select="true" data-pagination-v-align="bottom"
+                           data-sort-order="desc" data-strict-search="false" data-url="/Admin/ProjectWithStudentsMail/json"
+                           data-side-pagination="server" data-unique-id="id">
+                        <thead>
+                            <tr>
+                                <th data-field="image" data-formatter="" data-sortable="false">Image</th>
+                                <th data-field="title" data-sortable="true">Title</th>
+                                <th data-field="year" data-filter-control="select" data-sortable="true">Year</th>
+                                <th data-field="semester" data-filter-control="select" data-sortable="true">Semester</th>
+                                <th data-field="supervisorsNames" data-sortable="true" data-filter-control="input">Supervisors</th>
+                                <th data-field="lab" data-filter-control="select" data-sortable="true">Lab</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-success" id="btnSaveStudentChanges" onclick='addSelectedProjects()' data-dismiss="modal">Add</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+</div>
+
+{% endblock content %}
+
+{% block scripts %}
+	<script src="/static/js/bootstrap-table.js"></script>
+	<script src="/static/js/bootstrap-table-filter-control.js"></script>
+	<script src="https://rawgit.com/TimSchlechter/bootstrap-tagsinput/master/src/bootstrap-tagsinput.js"></script>
+	<script src="https://rawgit.com/bassjobsen/Bootstrap-3-Typeahead/master/bootstrap3-typeahead.js"></script>
+
+	<script>
+    {# Student modal #}
+        var studentsList;
+        var projectsList;
+        $('.tags').tagsinput({
+            confirmKeys: [13, 188, 32, 39]
+        });
+
+        {#students modal functions#}
+        function onStudentModal() {
+            $('#studentsTable').bootstrapTable('refresh');
+            studentsList = [];
+        }
+
+        $('#studentsTable').on('click-row.bs.table', function (e, row, element) {
+			if (element.hasClass("selectedRow")) {
+                studentsList = studentsList.filter(mail => mail !== row.email);
+			} else {
+			    studentsList.push(row.email);
+			}
+			element.toggleClass("selectedRow");
+		});
+
+        function addSelectedStudents() {
+            studentsList.forEach(function (mail) {
+                $('.tags').tagsinput('add', mail);
+            })
+        }
+
+        {#Project modal functions#}
+        function onProjectModal() {
+            console.info("in onProjectModal");
+            $('#projectsTable').bootstrapTable('refresh');
+            projectsList = [];
+        }
+
+        $('#projectsTable').on('click-row.bs.table', function (e, row, element) {
+			console.info("in click", row);
+            if (element.hasClass("selectedRow")) {
+                projectsList = studentsList.filter(proj => proj.id !== row.id);
+			} else {
+			    projectsList.push(row);
+			}
+			element.toggleClass("selectedRow");
+		});
+
+        function addSelectedProjects() {
+            projectsList.forEach(function (project) {
+                project.studentsMail.forEach(function (mail) {
+                    console.info(mail)
+                    $('.tags').tagsinput('add', mail);
+                });
+            })
+
+        }
+
+
+	</script>
+
+{% endblock scripts %}

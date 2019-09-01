@@ -1,4 +1,6 @@
-{% extends "layout.html" %} 
+{% extends "admin/admin-layout.html" %}
+{% set active_page = "proposedProjects" %}
+
 {% block styles %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.10.0/bootstrap-table.min.css">
 <style>
@@ -9,40 +11,6 @@
 	}
 </style>
 {% endblock styles %}
-{% block navbar %}
-<a class="navbar-brand px-4" href="{{ url_for('home') }}">AVR Lab Managment</a>
-<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
- aria-expanded="false" aria-label="Toggle navigation">
-	<span class="navbar-toggler-icon"></span>
-</button>
-
-<div class="collapse navbar-collapse" id="navbarSupportedContent">
-	<ul class="navbar-nav mr-auto">
-		<li class="nav-item dropdown">
-			<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true"
-			 aria-expanded="false">Admin</a>
-			<div class="dropdown-menu " aria-labelledby="navbarDropdown">
-				<a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a>
-			</div>
-		</li>
-		<li class="nav-item">
-			<a class="nav-link" href="{{ url_for('labOverview') }}">Overview</a>
-		</li>
-		<li class="nav-item">
-			<a class="nav-link" href="{{ url_for('manageProjects') }}">Projects</a>
-		</li>
-		<li class="nav-item">
-			<a class="nav-link active" href="{{ url_for('manageProposedProjects') }}">Proposed Projects</a>
-		</li>
-		<li class="nav-item">
-			<a class="nav-link" href="{{ url_for('manageStudents') }}">Students</a>
-		</li>
-		<li class="nav-item">
-			<a class="nav-link" href="{{ url_for('manageSupervisors') }}">Supervisors</a>
-		</li>
-	</ul>
-</div>
-{% endblock navbar %} 
 
 {% block content %}
 <h1>Proposed Projects</h1>
@@ -66,6 +34,7 @@
 					<th data-field="image" data-sortable="false">Image</th>
 					<th data-field="title" data-sortable="true" data-filter-control="input">Title</th>
 					<th data-field="description" data-sortable="false">Description</th>
+                    <th data-field="lab" data-sortable="false" data-filter-control="select">Lab</th>
 					<th data-field="supervisorsNames" data-width="15%">Supervisors</th>
 					<th data-field="btnEdit"></th>
 					<th data-field="btnDelete">
@@ -75,7 +44,7 @@
 			</thead>
 		</table>
 
-
+{# EDIT PROPOSED PROJECT#}
 	<div class="modal fade bg" id="editProposedProjectModal" tabindex="-1" role="dialog" aria-labelledby="editProposedProjectModalLabel" aria-hidden="true">
 			<div class="modal-dialog" role="document">
 				<div class="modal-content" style="color: #000;">
@@ -136,6 +105,15 @@
 								</div>
 
 								<div class="form-group row">
+									{{ editForm.lab.label(class="col-md-3 col-form-label") }}
+									<div class="col-md-7">
+										{{ editForm.lab(class="custom-select form-control") }}
+									</div>
+									<div class="col-md-1"></div>
+								</div>
+
+
+								<div class="form-group row">
 									{{ editForm.image.label(class="col-md-3 col-form-label text-center") }} 
 									<div class="col-md-6">
 										{% if editForm.image.errors %} 
@@ -153,7 +131,7 @@
 									<div class="col-md-1"></div>								
 								</div>
 
-								<div class="form-group row">
+                                <div class="form-group row">
 									{{ editForm.supervisor1.label(class="col-md-3 col-form-label") }}
 									<div class="col-md-7">
 										{{ editForm.supervisor1(class="custom-select form-control") }}
@@ -186,7 +164,7 @@
 			</div>
 		</div>
 
-
+{# ADD PROPOSED PROJECT#}
 	<div class="modal fade bg" id="addNewProposedProjectModal" tabindex="-1" role="dialog" aria-labelledby="addNewProposedProjectModalLabel" aria-hidden="true">
 		<div class="modal-dialog" role="document">
 			<div class="modal-content">
@@ -243,6 +221,14 @@
 								</div>
 								<div class="col-md-1"></div>
 							</div>
+
+                            <div class="form-group row">
+                                {{ addForm.newLab.label(class="col-md-3 col-form-label") }}
+                                <div class="col-md-7">
+                                    {{ addForm.newLab(class="custom-select form-control") }}
+                                </div>
+                                <div class="col-md-1"></div>
+                            </div>
 
 							<div class="form-group row">
 								{{ addForm.newImage.label(class="col-md-3 col-form-label text-center") }} 
@@ -330,7 +316,7 @@
 <script>
 	/* display the filename when choosing a profile picture */
 	$('#image, #newImage').on('change',function(){
-		let fileName = $(this).val().split('\\').pop(); 
+		let fileName = $(this).val().split('\\').pop();
 		$(this).next('.custom-file-label').addClass("selected").html(fileName);
 	})
 
@@ -352,6 +338,7 @@
 		$("#editProposedProjectForm #proposedProjectId").val(proposedProjectData.id);
 		$("#editProposedProjectForm #title").val(proposedProjectData.title);
 		$("#editProposedProjectForm #description").val(proposedProjectData.description);
+		$("#editProposedProjectForm #lab").val(proposedProjectData.lab);
 
 		// clear supervisors and set proposed project's supervisors
 		$("#editProposedProjectForm #supervisor1").val('')

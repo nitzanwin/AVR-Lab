@@ -1,0 +1,80 @@
+{% extends "layout.html" %}
+
+
+{% block navbar %}
+    {% if admin %}
+        <a class="navbar-brand px-4" href="{{ url_for('home') }}">Lab Managment</a>
+    {% endif %}
+    {% if lab %}
+        <a class="navbar-brand px-4" href="{{ url_for('home') }}">
+            <img src="/static/images/labs_logo/{{ lab.logo }}" style="max-height: 30px;margin-bottom:5px;"/>
+            {{ lab.acronym }} Lab Managment
+        </a>
+    {% endif %}
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+     aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav mr-auto">
+            {% set active_page = active_page|default('index') -%}
+            <li class="nav-item">
+                <a class="{{ 'nav-link active' if active_page == 'projects' else 'nav-link'}}"
+                   href="{{ url_for('manageProjects') }}">Projects</a>
+            </li>
+            <li class="nav-item">
+                <a class="{{ 'nav-link active' if active_page == 'proposedProjects' else 'nav-link'}}"
+                   href="{{ url_for('manageProposedProjects') }}">Proposed Projects</a>
+            </li>
+            <li class="nav-item">
+                <a class="{{ 'nav-link active' if active_page == 'students' else 'nav-link'}}"
+                   href="{{ url_for('manageStudents') }}">Students</a>
+            </li>
+            <li class="nav-item">
+                <a class="{{ 'nav-link active' if active_page == 'supervisors' else 'nav-link'}}"
+                   href="{{ url_for('manageSupervisors') }}">Supervisors</a>
+            </li>
+            <li class="nav-item">
+                <a class="{{ 'nav-link active' if active_page == 'courses' else 'nav-link'}}"
+                   href="{{ url_for('manageCourses') }}">Courses</a>
+            </li>
+            {% if admin %}
+                <li class="nav-item">
+                    <a class="{{ 'nav-link active' if active_page == 'lab' else 'nav-link'}}"
+                       href="{{ url_for('manageLabs') }}">Labs</a>
+                </li>
+            {% endif %}
+
+        </ul>
+
+        {% if admin %}
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true"
+                     aria-expanded="false">Admin</a>
+                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
+                        <a class="dropdown-item" href="{{ url_for('adminMail') }}">Mail</a>
+
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a>
+                    </div>
+                </li>
+            </ul>
+        {% else %}
+            <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true"
+                     aria-expanded="false">Lab Admin</a>
+                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
+                        <a class="dropdown-item" href="{{ url_for('editLab') }}">Edit Lab</a>
+                        <a class="dropdown-item" href="{{ url_for('adminMail') }}">Mail</a>
+
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a>
+                    </div>
+                </li>
+            </ul>
+        {% endif %}
+    </div>
+{% endblock navbar %}

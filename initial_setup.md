@@ -11,6 +11,8 @@
     - **RECAPTCHA_PUBLIC_KEY** - You need to get a pair of public and private keys from [Google reCAPTCHA](https://www.google.com/recaptcha/)
     
 3. Environment variables setup:
+    - **FLASK_APP=run.py** this will enable using flask migration and run the app 
+    - **FLASK_ENV=development** this will enable automatic reloader for debug mode
     - **FLASK_SECRET_KEY** (flask uses this to keep the client-side sessions secure). You can generate your own using the python shell: ```import secrets``` and then ```secrets.token_hex(16)```
     - **EMAIL_USER**
     - **EMAIL_PASS**
@@ -23,9 +25,9 @@
         In **Windows**: ```venv\Scripts\activate```
     - Install Wheel: ```pip install wheel```
     - Install all the packages the project uses: ```pip install -r requirements.txt```
-6. Run the application using flask's built-in development server: ```python3 run.py```  
+6. Run the application using flask's built-in development server: ```flask run```  
     This will also create the database file (in case it did not exist before).
-7. Navigate to ```/CreateAdminAccount``` and create an admin accout (this page will not be accessible after creating an admin account)
+7. If you atr on a new db: Navigate to ```/CreateAdminAccount``` and create an admin accout (this page will not be accessible after creating an admin account)
 8. Add at least one course in the ```Course``` table in the database. You can use a [DB Browser for SQLite](https://sqlitebrowser.org/) or use the python shell (make sure you are inside the virtual environment):
 
     
@@ -38,5 +40,6 @@
 
 9. Navigate to the supervisors page in the admin page and add some supervisors
 10. Navigate to the proposed projects page in the admin page and add some proposed projects
+
 
 ### Enjoy :wink:
